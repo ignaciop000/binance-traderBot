@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
+  </head>
+  <body>
+  	<h2>Market</h2>
+  	Symbol <span class="badge" id="symbol">------</span>
+  	Price <span class="badge" id="lastPrice">0.0</span>
+  	Buy Price <span class="badge" id="buyPrice">0.0</span>
+  	Sell Price <span class="badge" id="profitableSellingPrice">0.0</span>
+  	Bid <span class="badge" id="lastBid">0.0</span>
+  	Ask <span class="badge" id="lastAsk">0.0</span>
+  	Spread <span class="badge" id="spreadPerc">0.0</span>
+  	Original Sell Price <span class="badge" id="originalsellprice">0.0</span>
+  	<h2>Orders</h2>
+    <ul id="orders"></ul>
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script>
+ 	$(function () {
+    	var socket = io();
+    	/*
+    	$('form').submit(function(){
+      		socket.emit('chat message', $('#m').val());
+      		$('#m').val('');
+      		return false;
+    	});
+    	*/
+    	socket.on('update', function(msg){    		
+	    		$('#symbol').text(msg.symbol);
+	      		$('#lastPrice').text(msg.lastPrice);
+	      		$('#buyPrice').text(msg.buyPrice);
+	      		$('#profitableSellingPrice').text(msg.profitableSellingPrice);
+	      		$('#lastBid').text(msg.lastBid);
+	      		$('#lastAsk').text(msg.lastAsk);
+	      		$('#spreadPerc').text(msg.spreadPerc);
+	      		$('#originalsellprice').text(msg.originalsellprice);      		
+    	});
+    	socket.on('orders', function(msg){
+    		$('#orders').append($('<li>').text(msg));
+    	});
+  	});
+  </script>
+</html>
