@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Socket.IO chat</title>
+    <title>Binance Trader Bot</title>
     <style>
       * { margin: 0; padding: 0; box-sizing: border-box; }
       body { font: 13px Helvetica, Arial; }
@@ -11,6 +11,8 @@
       #messages { list-style-type: none; margin: 0; padding: 0; }
       #messages li { padding: 5px 10px; }
       #messages li:nth-child(odd) { background: #eee; }
+      .buy { color: green; }
+      .sell { color: red; }
     </style>
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
@@ -21,17 +23,9 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
 
   </head>
-  <body>
+  <body>    
+  	<h2>Market <span class="badge" id="status">Offline</span></h2>
     <div id="jsGrid"></div>
-  	<h2>Market</h2>
-  	Symbol <span class="badge" id="symbol">------</span>
-  	Price <span class="badge" id="lastPrice">0.0</span>
-  	Buy Price <span class="badge" id="buyPrice">0.0</span>
-  	Sell Price <span class="badge" id="profitableSellingPrice">0.0</span>
-  	Bid <span class="badge" id="lastBid">0.0</span>
-  	Ask <span class="badge" id="lastAsk">0.0</span>
-  	Spread <span class="badge" id="spreadPerc">0.0</span>
-  	Original Sell Price <span class="badge" id="originalsellprice">0.0</span>
   	<h2>Orders</h2>
     <ul id="orders"></ul>
   </body>
@@ -47,39 +41,64 @@
       		return false;
     	});
     	*/
+      socket.on('connect', function(socket){
+        $('#status').text('Online');
+      });
+      socket.on('disconnect', function(){
+        $('#status').text('Offline');
+      });
     	socket.on('update', function(msg){    		
-          $("#jsGrid").jsGrid("insertItem", msg).done(function() {
-            console.log("insertion completed");
-          });
-          $("#jsGrid").jsGrid("updateItem", msg);
-	    		$('#symbol').text(msg.symbol);
-	      		$('#lastPrice').text(msg.lastPrice);
-	      		$('#buyPrice').text(msg.buyPrice);
-	      		$('#profitableSellingPrice').text(msg.profitableSellingPrice);
-	      		$('#lastBid').text(msg.lastBid);
-	      		$('#lastAsk').text(msg.lastAsk);
-	      		$('#spreadPerc').text(msg.spreadPerc);
-	      		$('#originalsellprice').text(msg.originalsellprice);      		
+          var items = $("#jsGrid").jsGrid("option", "data");
+          var item = items.filter(x => x.symbol === msg.symbol);
+          if (item.length == 0) {
+            console.log(item);
+            $("#jsGrid").jsGrid("insertItem", msg).done(function() {
+              //console.log("insertion completed");
+            });
+          } else {
+            $("#jsGrid").jsGrid("updateItem", item[0], msg).done(function() {
+              //console.log("update completed");
+            });   
+          }
     	});
     	socket.on('orders', function(msg){
-    		$('#orders').append($('<li>').text(msg));
-
+        console.log(msg);
+        var item = $('#orders').append($('<li>'));
+    		item.text(msg.orderId + ' (' + msg.profitableSellingPrice + ')');
+        if (msg.action == 'buy') {
+          item.css('buy');
+        } else {
+          item.css('sell');
+        }
     	});
   	});
   </script>
 <script>
     $("#jsGrid").jsGrid({
         width: "100%",
-        height: "400px",
+        height: "200px",
  
-        inserting: true,
-        editing: true,
-        sorting: true,
-        paging: true,      
+        inserting: false,
+        editing: false,
+        sorting: false,
+        paging: false, 
+        filtering: false,     
  
         fields: [
-            { name: "symbol", type: "text", width: 150, validate: "required" },
-            { name: "lastPrice", type: "text", width: 150 },
+            { name: "symbol", title: "Symbol", type: "text" },
+            { name: "mode", title: "Mode", type: "text", width:50},            
+            { name: "buyQty",title: "Buy Quantity", type: "text" },
+            { name: "increasing",title: "Increasing", type: "text" },
+            { name: "decreasing",title: "Decreasing", type: "text"},
+            { name: "profit",title: "Preferred Profit", type: "text" },
+            { name: "stopLoss",title: "Stop Loss", type: "text", width:50},
+            { name: "lastPrice",title: "Price", type: "text" },
+            { name: "buyPrice",title: "Buy Price", type: "text" },
+            { name: "profitableSellingPrice",title: "Sell Price", type: "text" },
+            { name: "lastBid",title: "Bid", type: "text" },
+            { name: "lastAsk",title: "Ask", type: "text" },
+            { name: "spreadPerc",title: "Spread", type: "text"},
+            { name: "originalsellprice",title: "Original Sell Price", type: "text" },
         ]
     });
 </script>  

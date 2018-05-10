@@ -39,12 +39,13 @@ http.listen(app.get( 'port' ), function(){
   console.log( 'Express server listening on port ' + app.get( 'port' ));
 });
 
-let optionsDefault = [{
+let optionsDefault = [
+{
 	symbol:'VENBNB',
 	quantity:0,
 	stop_loss:0,
 	mode:'profit',
-	profit:1.3,
+	profit:0.1,
 	increasing:0.00000001,
 	decreasing:0.00000001,
 	loop:0,
@@ -56,7 +57,7 @@ let optionsDefault = [{
 	quantity:0,
 	stop_loss:0,
 	mode:'profit',
-	profit:1.3,
+	profit:0.1,
 	increasing:0.00000001,
 	decreasing:0.00000001,
 	loop:0,
@@ -68,7 +69,19 @@ let optionsDefault = [{
 	quantity:0,
 	stop_loss:0,
 	mode:'profit',
-	profit:1.3,
+	profit:0.1,
+	increasing:0.00000001,
+	decreasing:0.00000001,
+	loop:0,
+	wait_time:0.7,
+	prints: 1,
+},
+{
+	symbol:'ICXBTC',
+	quantity:0,
+	stop_loss:0,
+	mode:'profit',
+	profit:0.1,
 	increasing:0.00000001,
 	decreasing:0.00000001,
 	loop:0,
