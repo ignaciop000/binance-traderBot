@@ -3,8 +3,10 @@ let binanceRequest = require('./request');
 const axios = require("axios");
 
 class Binance {
+
 	constructor(config) {
 		this.request = binanceRequest(config);
+        this.orderId = 1000;
 	}
 
 	async get_ticker(symbol){			
@@ -30,7 +32,7 @@ class Binance {
 		//path = "%s/order" % self.BASE_URL_V3
         //params = self._order(market, quantity, "BUY", rate)
         //return self._post(path, params)
-        let data = {orderId:1000}
+        let data = {orderId:this.orderId++}
         return data;
 	}
 
@@ -56,7 +58,7 @@ class Binance {
         //path = "%s/order" % self.BASE_URL_V3
         //params = self._order(market, quantity, "SELL", rate)
         //return self._post(path, params)
-        let data = {orderId:1001, status:'FILLED', price:'0.1'}
+        let data = {orderId:this.orderId++, status:'FILLED', price:'0.00000762'}
         return data;
     }
 }

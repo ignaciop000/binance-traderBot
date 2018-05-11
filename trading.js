@@ -224,7 +224,7 @@ class Trading {
             // If the order is complete, try to sell it.            
 
             // Perform buy action
-            this.sell(symbol, quantity, this.order_id, profitableSellingPrice, lastPrice);            
+            await this.sell(symbol, quantity, this.order_id, profitableSellingPrice, lastPrice);            
             return
         }
 
@@ -237,8 +237,15 @@ class Trading {
             print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
 
             if (this.order_id == 0) {
-                this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
-                this.io.emit('orders',{action:'buy',orderId: this.order_id, symbol: symbol, quantity: quantity, buyPrice: format(buyPrice), profitableSellingPrice: format(profitableSellingPrice)});
+                let orderId = await this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
+                let orderDTO = {};
+                orderDTO.symbol = symbol; 
+                orderDTO.orderIdBuy = this.order_id;
+                orderDTO.buyPrice = format(buyPrice);
+                orderDTO.quantity = quantity;
+                this.io.emit('orders',orderDTO);
+
+                //this.io.emit('orders',{action:'buy',orderId: this.order_id, symbol: symbol, quantity: quantity, buyPrice: format(buyPrice), profitableSellingPrice: format(profitableSellingPrice)});
 
                 //# Perform check/sell action
                 //# checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
@@ -264,7 +271,6 @@ class Trading {
             print('%s : Buy order created id:%d, q:%.8f, p:%.8f, Take profit aprox :%.8f' ,symbol, orderId, quantity, parseFloat(buyPrice), profitableSellingPrice)
 
             this.order_id = orderId
-
             return orderId
 
         } catch (err) {
@@ -281,9 +287,11 @@ class Trading {
         The specified limit will try to sell until it reaches.
         If not successful, the order will be canceled.
         */
-
+        let orderDTO = {};
         let buy_order = await Orders.get_order(symbol, orderId)
-        console.log(buy_order);
+        orderDTO.symbol = symbol;
+        orderDTO.orderIdBuy = orderId;
+        orderDTO.statusBuy = buy_order.status;        
         if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
             //print('Buy order filled... Try sell...')
             print('Buy order filled... Try sell...')
@@ -301,18 +309,21 @@ class Trading {
                 //print('Buy order fail (Not filled) Cancel order...')
                 print('Buy order fail (Not filled) Cancel order...')
                 this.order_id = 0
+                this.io.emit('orders',orderDTO);
                 return
             }
         }
 
         let sell_order = await Orders.sell_limit(symbol, quantity, sell_price)
-
+        orderDTO.sellPrice = sell_price;
         let sell_id = sell_order.orderId
+        orderDTO.orderIdSell = sell_order.orderId;
+
         //print('Sell order create id: %d' % sell_id)
         print('Sell order create id: %d' , sell_id)
-
+    
         await wait(WAIT_TIME_CHECK_SELL)
-
+        orderDTO.statusSell = sell_order.status;
         if (sell_order.status == 'FILLED') {
 
             //print('Sell order (Filled) Id: %d', sell_id)
@@ -322,12 +333,11 @@ class Trading {
             print('Sell order (Filled) Id: %d', sell_id)
             print('LastPrice : %.8f', last_price)
             print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' , this.option.profit, parseFloat(sell_order.price), sell_price)
-            this.io.emit('orders',{action:'sell',profit:this.option.profit,buyPrice:sell_order.price, sellPrice: sell_price});
-
 
             this.order_id = 0
             this.order_data = null
-
+            orderDTO.profit = format( quantity * ( sell_price - sell_order.price));
+            this.io.emit('orders',orderDTO);
             return
         }
 
@@ -369,7 +379,9 @@ class Trading {
 
             this.order_id = 0
             this.order_data = None
-        }
+
+        } 
+        this.io.emit('orders',orderDTO);        
     }
 
     check_order() {
