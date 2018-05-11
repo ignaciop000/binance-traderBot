@@ -1,5 +1,6 @@
 // binanceRequest is used to get an axios instance with default url and default header
 let binanceRequest = require('./request');
+const { format } = require('./utils');
 const axios = require("axios");
 
 class Binance {
@@ -27,39 +28,48 @@ class Binance {
     	return data;
 	}
 
-	async buy_limit(market, quantity, rate){
-		//TODO
-		//path = "%s/order" % self.BASE_URL_V3
-        //params = self._order(market, quantity, "BUY", rate)
-        //return self._post(path, params)
-        let data = {orderId:this.orderId++}
+	async buy_limit(market, quantity, rate){		
+        const url = '/v3/order';
+        let params = makeOrder(market, quantity, "BUY", rate)
+        const {data} = await this.request.post(url, params);
         return data;
 	}
 
 	async query_order(symbol, orderId){
-		//TODO
-        let data = {status:'FILLED', side:'BUY'}
-        return data;
-        //path = "%s/order" % self.BASE_URL_V3
-        //params = {"symbol": market, "orderId": orderId}
-        //return self._get(path, params)
+        const url = '/v3/order';
+        const { data } = await this.request.get(url, { params : { symbol: symbol, orderId: orderId} });
+        return data;    
 	}
 
 	async cancel(market, order_id){
-    	//TODO
-        let data = {}
-        return data;
-        //path = "%s/order" % self.BASE_URL_V3
-        //params = {"symbol": market, "orderId": order_id}
-        //return self._delete(path, params)
+        const url = '/v3/order';
+        const { data } = await this.request.delete(url, { params : { symbol: symbol, orderId: orderId} });
+        return data; 
     }
 
     async sell_limit(market, quantity, rate){
-        //path = "%s/order" % self.BASE_URL_V3
-        //params = self._order(market, quantity, "SELL", rate)
-        //return self._post(path, params)
-        let data = {orderId:this.orderId++, status:'FILLED', price:'0.00000762'}
-        return data;
+        const url = '/v3/order';
+        let params = makeOrder(market, quantity, "SELL", rate)
+        const {data} = await this.request.post(url, params);
+        return data;        
+    }
+
+    makeOrder(market, quantity, side, rate=null){
+        params = {}
+         
+        if (rate != null) {
+            params.type = "LIMIT"
+            paramsprice = format(rate)
+            params.timeInForce = "GTC"
+        } else {
+            params.type = "MARKET"
+        }
+
+        params.symbol = market
+        params.side = side
+        params.quantity = format(quantity)
+        
+        return params
     }
 }
 
