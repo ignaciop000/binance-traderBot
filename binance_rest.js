@@ -30,7 +30,7 @@ class Binance {
 
 	async buy_limit(market, quantity, rate){		
         const url = '/v3/order';
-        let params = makeOrder(market, quantity, "BUY", rate)
+        let params = this.makeOrder(market, quantity, "BUY", rate)
         const {data} = await this.request.post(url, params);
         return data;
 	}
@@ -49,7 +49,7 @@ class Binance {
 
     async sell_limit(market, quantity, rate){
         const url = '/v3/order';
-        let params = makeOrder(market, quantity, "SELL", rate)
+        let params = this.makeOrder(market, quantity, "SELL", rate)
         const {data} = await this.request.post(url, params);
         return data;        
     }
