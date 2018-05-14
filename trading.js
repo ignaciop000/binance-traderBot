@@ -172,6 +172,9 @@ class Trading {
 
         //Fetches the ticker price
         let lastPrice = await Orders.get_ticker(symbol);
+        if (lastPrice == null) {
+            return 'Error, getting lastPrice';
+        }
 
         // Order book prices
         let last = await Orders.get_order_book(symbol)
