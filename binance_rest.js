@@ -4,6 +4,7 @@
 let binanceRequest = require('./request');
 const { format, checkEnum } = require('./utils');
 const axios = require("axios");
+const getSignature = require('./signature');
 
 class Binance {
 
@@ -65,6 +66,9 @@ class Binance {
 
                 case 'quantity':
                 case 'price':
+                    //TODO validate float as string
+                    break;
+                case 'orderId':
                 case 'stopPrice':
                 case 'icebergQty':
                 case 'recvWindow':
@@ -98,106 +102,145 @@ class Binance {
 	}
 
 	async buy_limit(market, quantity, rate){		
-        const url = '/v3/order';
-        let params = this.makeOrder(market, quantity, "BUY", rate)
-        const {data} = await this.request.post(url, params);
-        return data;
+        let params = {}
+        params.symbol = market;
+        params.side = "BUY";
+        params.type = "LIMIT";
+        params.timeInForce = "GTC"
+        params.quantity = format(quantity)
+        params.price = format(rate)        
+        this.signedMethod() // secret and api key required for this method
+        this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity", "price"]) // data required in the params object
+
+        const url = "v3/order"
+        let query = this.makeQuery(url, params);
+        console.log(query);
+        const resp = await this.request.post(query);    
+        return resp.data;
 	}
 
 	async query_order(symbol, orderId){
+        this.signedMethod() // secret and api key required for this method
+        let params = {}
+        params.symbol = symbol;
+        params.orderId = orderId;
+        this.checkParams(params, ["symbol", "orderId"]) // data required in the params object
+
         const url = '/v3/order';
-        const { data } = await this.request.get(url, { params : { symbol: symbol, orderId: orderId} });
-        return data;    
+        let query = this.makeQuery(url, params);
+        const resp = await this.request.get(query);
+        return resp.data; 
 	}
 
     async allOrders(params = {}){
         this.signedMethod() // secret and api key required for this method
-
-        checkParams(params, ["symbol"]) // data required in the params object
-
+        this.checkParams(params, ["symbol"]) // data required in the params object
         const url = "v3/allOrders"
-        const { data } = await this.request.get(this.makeQuery(url, params).signedQuery())
-        return data;
+        let query = this.makeQuery(url, params);
+        const resp = await this.request.get(query);              
+        return resp.data;
+    }
+
+    async openOrders(params = {}){
+        this.signedMethod() // secret and api key required for this method
+        const url = "v3/openOrders"
+        let query = this.makeQuery(url, params);
+        const resp = await this.request.get(query);              
+        return resp.data;
     }
     
     apiRequired(){
-        if (!this.api)
+        if (!this.api) {
             throw new SyntaxError("API key is required for this method")
+        }
     }
-
+    
     signedMethod(){ //function word because we need to bind "this" context
         this.apiRequired()
-        if (!this.secret)
+        if (!this.secret) {
             throw new SyntaxError("Secret key is required for this method")
+        }
     }
 
 
-    makeQuery(link, dataQuery = {}) {
+    makeQuery(url, dataQuery = {}, timestamp = -1) {
         this.signedMethod()
+        
+        if (!url || typeof url !== "string") {
+            throw "Url is missing and should be a string"
+        }
+        
+        if (!dataQuery || typeof dataQuery !== "object") {
+            throw "Object type required for data param"
+        }
 
-        return (function(url, data, secret, timeout){ // return a closure to have a "different" this in each instance of makeQuery()
+        if (dataQuery.timestamp) {
+            delete dataQuery.timestamp
+        }
 
-            if (!url || typeof url !== "string")
-                throw "Url is missing and should be a string"
+        if (this.timeout)
+            dataQuery.recvWindow=timeout;
+        
+        const query = Object.keys(dataQuery).map((key)=> {
+            return key+"="+dataQuery[key]
+        })
 
-            if (!data || typeof data !== "object")
-                throw "Object type required for data param"
-
-            if (data.timestamp)
-                delete data.timestamp
-
-            const query = Object.keys(data).map((key)=> {
-                return key+"="+data[key]
-            })
-
-            this.signedQuery = ()=>{
-                if (timeout)
-                    query.push("recvWindow="+timeout)
-
-                const now = process.env.NODE_ENV === "test" ? 1508279351690 : Date.now() // for unit testing we set a static timestamp
-                const queryTimeStamp = [ query.join('&'), "&timestamp="+now ].join("")
-                return [ url, "?", queryTimeStamp, "&signature="+getSignature(queryTimeStamp, secret) ].join("")
-            }
-
-            this.query = ()=>{
-                return [ url, (query.length ? "?" : ""), query.join('&') ].join("")
-            }
-
-            return this
-        }).call({}, link, dataQuery, this.secret, this.timeout) // bind an empty object as this
+        let now = Date.now() // for unit testing we set a static timestamp
+        if (timestamp != -1) {
+            now = timestamp
+        }
+        const queryTimeStamp = [ query.join('&'), "&timestamp="+now ].join("")
+        return [ url, "?", queryTimeStamp, "&signature="+getSignature(queryTimeStamp, this.secret) ].join("")            
     }
 
 
 	async cancel(market, order_id){
+        this.signedMethod() // secret and api key required for this method
+        let params = {}
+        params.symbol = market;
+        params.orderId = order_id;
+        this.checkParams(params, ["symbol", "orderId"]) // data required in the params object
+
         const url = '/v3/order';
-        const { data } = await this.request.delete(url, { params : { symbol: symbol, orderId: orderId} });
-        return data; 
+        let query = this.makeQuery(url, params);
+        const resp = await this.request.delete(query);
+        return resp.data;
     }
 
     async sell_limit(market, quantity, rate){
-        const url = '/v3/order';
-        let params = this.makeOrder(market, quantity, "SELL", rate)
-        const {data} = await this.request.post(url, params);
-        return data;        
-    }
-
-    makeOrder(market, quantity, side, rate=null){
-        params = {}
-         
-        if (rate != null) {
-            params.type = "LIMIT"
-            paramsprice = format(rate)
-            params.timeInForce = "GTC"
-        } else {
-            params.type = "MARKET"
-        }
-
-        params.symbol = market
-        params.side = side
+        let params = {}
+        params.symbol = market;
+        params.side = "SELL";
+        params.type = "LIMIT";
+        params.timeInForce = "GTC"
         params.quantity = format(quantity)
-        
-        return params
+        params.price = format(rate)        
+        this.signedMethod() // secret and api key required for this method
+        this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity", "price"]) // data required in the params object
+
+        const url = "v3/order"
+        let query = this.makeQuery(url, params);
+        console.log(query);
+        const resp = await this.request.post(query);    
+        return resp.data;  
     }
+
+    async sell_market(market, quantity){
+        let params = {}
+        params.symbol = market;
+        params.side = "SELL";
+        params.type = "MARKET";
+        params.quantity = format(quantity) 
+        this.signedMethod() // secret and api key required for this method
+        this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity"]) // data required in the params object
+
+        const url = "v3/order"
+        let query = this.makeQuery(url, params);
+        console.log(query);
+        const resp = await this.request.post(query);    
+        return resp.data;  
+    }
+
 }
 
 module.exports = Binance;

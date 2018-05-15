@@ -89,31 +89,122 @@ describe('Binance REST', function() {
 
     })
 
-
+*/
     describe('\n signedMethod', function() {
       this.timeout(10000)
-      it('Call method without secret key - should throw an exception', function() {
-        const conf = {
-          api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A"
-        }
+      it('Call method without secret key - should throw an exception', function(done) {
+
         const instance = new Binance({api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A"})
-        expect( function(){  instance.allOrders() }).to.throw("Secret key is required for this method")
+        instance.allOrders().then(() => {
+          done(new Error('Expected method to reject.'))
+        }).catch((err) => {          
+          expect(err.message).to.be.equal("Secret key is required for this method")
+          done();
+        });        
       })
-
-
+/*
       it('Call method with secret key - should be ok', function(done) {
         const conf = {
           api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
           secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
         }
         const instance = new Binance(conf)
-        instance.allOrders({symbol: "GASNEO"})
-          .then(done)
-          .catch(done.bind({}, null))
+        instance.allOrders({symbol: "BNBBTC"}).then((data) => {
+          //TODO assert
+          done();
+        }).catch((err) => {    
+          console.log(err);
+           done(new Error('Expected method to resolve'))
+        });
+                  
       })
-
+*/
+      it('openOrders - should be ok', function(done) {
+        const conf = {
+          api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
+          secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
+        }
+        const instance = new Binance(conf)
+        instance.openOrders().then((data) => {
+          //TODO assert
+          console.log(data);
+          done();
+        }).catch((err) => {    
+          console.log(err);
+           done(new Error('Expected method to resolve'))
+        });
+                  
+      })
+      it('queryOrders - should be ok', function(done) {
+        const conf = {
+          api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
+          secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
+        }
+        const instance = new Binance(conf)
+        instance.query_order('LTCBTC',45755261).then((data) => {
+          //TODO assert
+          console.log(data);
+          done();
+        }).catch((err) => {    
+          console.log(err);
+           done(new Error('Expected method to resolve'))
+        });
+                  
+      })
+/*      
+      it('cancel order - should be ok', function(done) {
+        const conf = {
+          api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
+          secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
+        }
+        const instance = new Binance(conf)
+        instance.cancel('LTCBTC',45755261).then((data) => {
+          //TODO assert
+          console.log(data);
+          done();
+        }).catch((err) => {    
+          console.log(err);
+           done(new Error('Expected method to resolve'))
+        });
+                  
+      })       
+      it('buy order - should be ok', function(done) {
+        const conf = {
+          api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
+          secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
+        }
+        const instance = new Binance(conf)
+        instance.buy_limit('LTCBTC',1500,0.000001).then((data) => {
+          //TODO assert
+          console.log(data);
+          done();
+        }).catch((err) => {    
+          console.log(err);
+           done(new Error('Expected method to resolve'))
+        });
+                  
+      })
+      */
+      /*
+    it('sell order - should be ok', function(done) {
+        const conf = {
+          api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
+          secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
+        }
+        const instance = new Binance(conf)
+        instance.sell_limit('TRXBTC',1500,0.001).then((data) => {
+          //TODO assert
+          console.log(data);
+          done();
+        }).catch((err) => {    
+          console.log(err);
+           done(new Error('Expected method to resolve'))
+        });
+                  
+      })
+      */            
     })
-
+    
     describe('\n makeQuery', function() {
       it('Call method without api key - should throw an exception', function() {
         const instance = new Binance()
@@ -146,29 +237,16 @@ describe('Binance REST', function() {
         expect( function(){  instance.makeQuery("url", true) }).to.throw("Object type required for data param")
       })
 
-      it('Call method with timestamp - should be ok', function() {
-        const conf = {
-          api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
-          secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
-        }
-        const instance = new Binance(conf)
-        const val = instance.makeQuery("depth", {symbol: "GASBTC", timestamp: 1515165})
-        expect(val.query()).to.be.equal("depth?symbol=GASBTC")
-      })
-
-
       it('Call method with good param - should be ok', function() {
         const conf = {
           api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
           secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
         }
         const instance = new Binance(conf)
-        const val = instance.makeQuery("depth", {symbol: "GASBTC"})
-        expect(val.query()).to.be.equal("depth?symbol=GASBTC")
-        expect(val.signedQuery()).to.be.equal("depth?symbol=GASBTC&timestamp=1508279351690&signature=10737f0f87e01e7b4d085ff19ed4549b291fee038c4209ff55e72ae28e4f9b1d")
+        const val = instance.makeQuery("depth", {symbol: "GASBTC"}, 1508279351690)
+        expect(val).to.be.equal("depth?symbol=GASBTC&timestamp=1508279351690&signature=10737f0f87e01e7b4d085ff19ed4549b291fee038c4209ff55e72ae28e4f9b1d")
       })
 
 
     })
-*/
   })

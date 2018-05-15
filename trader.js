@@ -8,6 +8,7 @@ const bodyParser = require('body-parser')
 const path    = require( 'path' );
 
 const trading_lib = require('./trading');
+const Orders = require('./orders');
 
 // use the bodyparser as a middleware  
 app.use(bodyParser.json())
@@ -26,14 +27,15 @@ app.use(function(req, res, next) {
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/views/index.html');
 });
-/*
-io.on('connection', function(socket){
-  console.log('a user connected');
-  socket.on('disconnect', function(){
-    console.log('user disconnected');
-  });
+
+io.on('connection', async function(socket){
+	let orders = await Orders.openOrders()
+	console.log(orders);
+//  socket.on('disconnect', function(){
+//    console.log('user disconnected');
+//  });
 });
-*/
+
 
 http.listen(app.get( 'port' ), function(){
   console.log( 'Express server listening on port ' + app.get( 'port' ));
@@ -41,7 +43,7 @@ http.listen(app.get( 'port' ), function(){
 
 let optionsDefault = [
 {
-	symbol:'VENBNB',
+	symbol:'ZECBTC',
 	quantity:0,
 	stop_loss:0,
 	mode:'profit',
@@ -65,6 +67,30 @@ let optionsDefault = [
 	prints: 1,
 },
 {
+	symbol:'BCNBTC',
+	quantity:0,
+	stop_loss:0,
+	mode:'profit',
+	profit:1.5,
+	increasing:0.00000001,
+	decreasing:0.00000001,
+	loop:0,
+	wait_time:0.7,
+	prints: 1,
+},
+{
+	symbol:'EOSBTC',
+	quantity:0,
+	stop_loss:0,
+	mode:'profit',
+	profit:1.0,
+	increasing:0.00000001,
+	decreasing:0.00000001,
+	loop:0,
+	wait_time:0.7,
+	prints: 1,
+},
+{
 	symbol:'XVGBTC',
 	quantity:0,
 	stop_loss:0,
@@ -76,6 +102,7 @@ let optionsDefault = [
 	wait_time:0.7,
 	prints: 1,
 }];
+
 
 optionsDefault.forEach(function (optionDefault) {	
 	var trading = new trading_lib.Trading(io, optionDefault);

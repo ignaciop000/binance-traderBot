@@ -6,9 +6,8 @@ const BNB_COMMISION   = 0.0005;
 const WAIT_TIME_BUY_SELL = 1000 // miliseconds
 const WAIT_TIME_CHECK_BUY_SELL = 200 // miliseconds
 const WAIT_TIME_CHECK_SELL = 5000 // miliseconds
-        /*            
-            WAIT_TIME_STOP_LOSS = 20 # seconds
-
+const WAIT_TIME_STOP_LOSS = 20000 // miliseconds
+/*
             MAX_TRADE_SIZE = 7 # int
         */
 
@@ -76,7 +75,9 @@ class Trading {
         let last = await Orders.get_order_book(symbol)
 
         let lastPrice = await Orders.get_ticker(symbol);
-
+        if (lastPrice == null) {
+            return 'Error, getting lastPrice';
+        }
         let minQty = parseFloat(filters.LOT_SIZE.minQty)
         let minPrice = parseFloat(filters.PRICE_FILTER.minPrice)
         let minNotional = parseFloat(filters.MIN_NOTIONAL.minNotional)
@@ -306,9 +307,9 @@ class Trading {
             } else if (buy_order.status == 'PARTIALLY_FILLED' && buy_order.side == 'BUY') {
                 //print('Buy order partially filled... Try sell... Cancel remaining buy...')
                 print('Buy order partially filled... Try sell... Cancel remaining buy...')
-                this.cancel(symbol, orderId)
+                await this.cancel(symbol, orderId)
             } else {
-                this.cancel(symbol, orderId)
+                await this.cancel(symbol, orderId)
                 //print('Buy order fail (Not filled) Cancel order...')
                 print('Buy order fail (Not filled) Cancel order...')
                 this.order_id = 0
@@ -352,9 +353,10 @@ class Trading {
         if (this.stop_loss > 0) {
 
             // If sell order failed after 5 seconds, 5 seconds more wait time before selling at loss
-            await wait(self.WAIT_TIME_CHECK_SELL)
+            await wait(WAIT_TIME_CHECK_SELL)
             let status_order;
-            if (this.stop(symbol, quantity, sell_id, last_price)) {
+            let isStop = await this.stop(symbol, quantity, sell_id, last_price);
+            if (isStop) {
                 status_order = await Orders.get_order(symbol, sell_id);
                 if (status_order.status != 'FILLED') {
                     //print('We apologize... Sold at loss...')
@@ -364,7 +366,7 @@ class Trading {
             } else {
                 //print('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
                 print('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
-                this.cancel(symbol, sell_id)
+                await this.cancel(symbol, sell_id)
                 process.exit(1)
             }
             let sell_status = "";
@@ -372,7 +374,7 @@ class Trading {
                 await wait(WAIT_TIME_CHECK_SELL)
                 status_order = await Orders.get_order(symbol, sell_id);
                 sell_status = status_order.status
-                lastPrice = Orders.get_ticker(symbol)
+                lastPrice = await Orders.get_ticker(symbol)
                 //print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
                 //print('Sold! Continue trading...')
 
@@ -385,6 +387,74 @@ class Trading {
 
         } 
         this.io.emit('orders',orderDTO);        
+    }
+
+
+    async stop( symbol, quantity, orderId, last_price) {
+        // If the target is not reached, stop-loss.
+        let stop_order = await Orders.get_order(symbol, orderId)
+
+        let stopprice =  this.calc(parseFloat(stop_order.price))
+
+        lossprice = stopprice - (stopprice * this.stop_loss / 100)
+
+        let status = stop_order.status
+
+        // Order status
+        if (status == 'NEW' || status == 'PARTIALLY_FILLED') {
+            let isCancel = await this.cancel(symbol, orderId);
+            if (isCancel) {
+                let sello = null;
+                // Stop loss
+                if (last_price >= lossprice){
+
+                    sello = await Orders.sell_market(symbol, quantity)
+
+                    //#print('Stop-loss, sell market, %s' % (last_price))
+                    print('Stop-loss, sell market, %s' , last_price)
+
+                    let sell_id = sello.orderId
+
+                    if (sello == true){
+                        return true;
+                    } else {
+                        // Wait a while after the sale to the loss.
+                        await wait(WAIT_TIME_STOP_LOSS)
+                        let statusloss = sello.status
+                        if (statusloss != 'NEW'){                            
+                            print('Stop-loss, sold')
+                            return true
+                        } else {
+                            await this.cancel(symbol, sell_id)
+                            return false
+                        }
+                    }
+                } else {
+                    sello = await Orders.sell_limit(symbol, quantity, lossprice)
+                    print('Stop-loss, sell limit, %s', (lossprice))
+                    await(WAIT_TIME_STOP_LOSS)
+                    let statusloss = sello.status
+                    if (statusloss != 'NEW'){
+                        print('Stop-loss, sold')
+                        return true
+                    }else{
+                        await this.cancel(symbol, sell_id)
+                        return false
+                    }
+                }
+            } else {
+                print('Cancel did not work... Might have been sold before stop loss...')
+                return true
+            }
+
+        } else if (status == 'FILLED') {
+            this.order_id = 0
+            this.order_data = null
+            print('Order filled')
+            return true
+        } else {
+            return false
+        }
     }
 
     check_order() {
