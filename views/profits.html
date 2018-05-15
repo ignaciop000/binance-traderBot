@@ -1,0 +1,6 @@
+<%= symbol %>
+<ul>
+<% profits.forEach(function(res){ %>
+	<li><%= res.symbol %> - <%= res.profit %> - <%= res.lastAsk %> - <%= res.lastBid %>  </li>
+<% }) %>
+</ul>

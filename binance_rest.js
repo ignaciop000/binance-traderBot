@@ -84,19 +84,19 @@ class Binance {
     }    
 
 	async get_ticker(symbol){			
-    	const url = '/v1/ticker/24hr';
+    	const url = 'api/v1/ticker/24hr';
     	const { data } = await this.request.get(url, { params : { symbol: symbol }});
     	return data;
 	}
 
 	async get_order_book(symbol, limit = 50) {		
-    	const url = '/v1/depth';
+    	const url = 'api/v1/depth';
     	const { data } = await this.request.get(url, { params : { symbol: symbol, limit: limit} });
     	return data;    	
 	}
 
 	async get_exchange_info(symbol) {		
-    	const url = '/v1/exchangeInfo';
+    	const url = 'api/v1/exchangeInfo';
     	const { data } = await this.request.get(url);
     	return data;
 	}
@@ -112,7 +112,7 @@ class Binance {
         this.signedMethod() // secret and api key required for this method
         this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity", "price"]) // data required in the params object
 
-        const url = "v3/order"
+        const url = "api/v3/order"
         let query = this.makeQuery(url, params);
         console.log(query);
         const resp = await this.request.post(query);    
@@ -126,7 +126,7 @@ class Binance {
         params.orderId = orderId;
         this.checkParams(params, ["symbol", "orderId"]) // data required in the params object
 
-        const url = '/v3/order';
+        const url = 'api/v3/order';
         let query = this.makeQuery(url, params);
         const resp = await this.request.get(query);
         return resp.data; 
@@ -135,7 +135,7 @@ class Binance {
     async allOrders(params = {}){
         this.signedMethod() // secret and api key required for this method
         this.checkParams(params, ["symbol"]) // data required in the params object
-        const url = "v3/allOrders"
+        const url = "api/v3/allOrders"
         let query = this.makeQuery(url, params);
         const resp = await this.request.get(query);              
         return resp.data;
@@ -143,7 +143,7 @@ class Binance {
 
     async openOrders(params = {}){
         this.signedMethod() // secret and api key required for this method
-        const url = "v3/openOrders"
+        const url = "api/v3/openOrders"
         let query = this.makeQuery(url, params);
         const resp = await this.request.get(query);              
         return resp.data;
@@ -201,7 +201,7 @@ class Binance {
         params.orderId = order_id;
         this.checkParams(params, ["symbol", "orderId"]) // data required in the params object
 
-        const url = '/v3/order';
+        const url = 'api/v3/order';
         let query = this.makeQuery(url, params);
         const resp = await this.request.delete(query);
         return resp.data;
@@ -218,7 +218,7 @@ class Binance {
         this.signedMethod() // secret and api key required for this method
         this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity", "price"]) // data required in the params object
 
-        const url = "v3/order"
+        const url = "api/v3/order"
         let query = this.makeQuery(url, params);
         console.log(query);
         const resp = await this.request.post(query);    
@@ -234,11 +234,26 @@ class Binance {
         this.signedMethod() // secret and api key required for this method
         this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity"]) // data required in the params object
 
-        const url = "v3/order"
+        const url = "api/v3/order"
         let query = this.makeQuery(url, params);
         console.log(query);
         const resp = await this.request.post(query);    
         return resp.data;  
+    }
+
+    async get_products() {
+        const url = "exchange/public/product"
+        const { data } = await this.request.get(url);
+        return data;
+    }
+
+    async get_account() {
+        let params = {};
+        this.signedMethod() // secret and api key required for this method       
+        const url = "api/v3/account"
+        let query = this.makeQuery(url, params);
+        const resp = await this.request.get(query);              
+        return resp.data;
     }
 
 }

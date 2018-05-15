@@ -132,6 +132,26 @@ async function openOrders () {
 	}
 }
 
+async function get_products () {
+	try {
+		let coins = await client.get_products();
+		return coins;
+	} catch (err) {
+		print('get_products Exception: %s', err);
+		return []; 
+	}
+}
+
+async function get_account() {
+	try {
+		let account = await client.get_account();
+		return account;
+	} catch (err) {
+		print('get_account Exception: %s', err);
+		return null; 
+	}
+}
+
 module.exports.get_ticker = get_ticker;
 module.exports.get_order_book = get_order_book;
 module.exports.get_info = get_info;
@@ -140,3 +160,5 @@ module.exports.get_order = get_order;
 module.exports.cancel_order = cancel_order;
 module.exports.sell_limit = sell_limit;
 module.exports.openOrders = openOrders;
+module.exports.get_products = get_products;
+module.exports.get_account = get_account;

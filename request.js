@@ -12,7 +12,7 @@ const binanceRequest = function(config = {}) {
 	const { api, secret, timeout } = config
 
 	const axiosDefinition = {
-    	baseURL: "https://www.binance.com/api"
+    	baseURL: "https://www.binance.com/"
   	}
 
   	if (api) {
