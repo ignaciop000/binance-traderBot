@@ -16,8 +16,7 @@ async function get_ticker(symbol) {
 		//console.log(response);	
 		return response.lastPrice;
 	} catch (err) {
-		//console.log(err);
-		return null;
+		console.log(err);
 	}
 }
 
@@ -112,7 +111,7 @@ async function sell_limit(symbol, quantity, sell_price){
 
 async function sell_market(symbol, quantity, sell_price){
 
-       let order = await client.sell_market(symbol, quantity,   
+       let order = await client.sell_market(symbol, quantity, sell_price)  
 
 		if (order.msg) {
 			print("%s",order.msg);
