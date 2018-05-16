@@ -16,7 +16,8 @@ async function get_ticker(symbol) {
 		//console.log(response);	
 		return response.lastPrice;
 	} catch (err) {
-		console.log(err);
+		//console.log(err);
+		return null;
 	}
 }
 

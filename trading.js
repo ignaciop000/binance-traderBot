@@ -26,6 +26,8 @@ class Trading {
 		// Define trade vars  
 		this.order_id = 0;
 		this.order_data = null;
+
+        this.sell_order_id = 0;
    
     	this.buy_filled = true
     	this.sell_filled = true
@@ -76,7 +78,8 @@ class Trading {
 
         let lastPrice = await Orders.get_ticker(symbol);
         if (lastPrice == null) {
-            return 'Error, getting lastPrice';
+            print ('Error, getting lastPrice');
+            valid = false;
         }
         let minQty = parseFloat(filters.LOT_SIZE.minQty)
         let minPrice = parseFloat(filters.PRICE_FILTER.minPrice)
@@ -174,7 +177,8 @@ class Trading {
         //Fetches the ticker price
         let lastPrice = await Orders.get_ticker(symbol);
         if (lastPrice == null) {
-            return 'Error, getting lastPrice';
+            print('Error, getting lastPrice');
+            return;
         }
 
         // Order book prices
@@ -317,15 +321,22 @@ class Trading {
                 return
             }
         }
+        let last = await Orders.get_order_book(symbol)
+        print("Profit:%.8f buyPrice:%.8f sellPrice:%.8f",format( quantity * ( last.lastAsk - buy_order.price)), buy_order.price, last.lastAsk);
+        let sell_order = null;
+        if (this.sell_order_id == 0) {
+            sell_order = await Orders.sell_limit(symbol, quantity, sell_price)        
+            orderDTO.sellPrice = sell_price;
+            let sell_id = sell_order.orderId
+            this.sell_order_id = sell_id;
+            orderDTO.orderIdSell = sell_order.orderId;
 
-        let sell_order = await Orders.sell_limit(symbol, quantity, sell_price)
-        orderDTO.sellPrice = sell_price;
-        let sell_id = sell_order.orderId
-        orderDTO.orderIdSell = sell_order.orderId;
+            //print('Sell order create id: %d' % sell_id)
+            print('Sell order create id: %d' , sell_id)
+        } else {
+           sell_order =  await Orders.get_order(symbol, this.sell_order_id);
+        }
 
-        //print('Sell order create id: %d' % sell_id)
-        print('Sell order create id: %d' , sell_id)
-    
         await wait(WAIT_TIME_CHECK_SELL)
         orderDTO.statusSell = sell_order.status;
         if (sell_order.status == 'FILLED') {
@@ -334,11 +345,12 @@ class Trading {
             //print('LastPrice : %.8f', last_price)
             //print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
 
-            print('Sell order (Filled) Id: %d', sell_id)
+            print('Sell order (Filled) Id: %d', this.sell_order_id)
             print('LastPrice : %.8f', last_price)
             print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' , this.option.profit, parseFloat(sell_order.price), sell_price)
 
             this.order_id = 0
+            this.sell_order_id = 0
             this.order_data = null
             orderDTO.profit = format( quantity * ( sell_price - sell_order.price));
             this.io.emit('orders',orderDTO);
@@ -375,11 +387,16 @@ class Trading {
                 status_order = await Orders.get_order(symbol, sell_id);
                 sell_status = status_order.status
                 lastPrice = await Orders.get_ticker(symbol)
+                if (lastPrice == null) {
+                    print('Error, getting lastPrice');                    
+                } else {                    
+                    print('Sold! Continue trading...')    
+                }
+                print('Sold! Continue trading...')    
                 //print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
                 //print('Sold! Continue trading...')
 
-                print('Status: %s Current price: %.8f Sell price: %.8f' , sell_status, lastPrice, sell_price)
-                print('Sold! Continue trading...')
+                
             }
 
             this.order_id = 0
@@ -531,7 +548,7 @@ class Trading {
                await wait(this.wait_time - (endTime - startTime))
 
                // 0 = Unlimited loop
-               if (self.option.loop > 0){
+               if (this.option.loop > 0){
                    cycle = cycle + 1
                }
            }           

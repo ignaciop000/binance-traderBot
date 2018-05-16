@@ -124,7 +124,20 @@ let optionsDefault = [
 	loop:0,
 	wait_time:0.7,
 	prints: 1,
-}];
+},
+{
+	symbol:'PPTBTC',
+	quantity:0,
+	stop_loss:0,
+	mode:'profit',
+	profit:1.0,
+	increasing:0.00000001,
+	decreasing:0.00000001,
+	loop:0,
+	wait_time:0.7,
+	prints: 1,
+}
+];
 
 
 optionsDefault.forEach(function (optionDefault) {	
