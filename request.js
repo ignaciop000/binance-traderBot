@@ -9,21 +9,21 @@ const getSignature = require('./signature')
  * @return {Axios}         an axios instance
  */
 const binanceRequest = function(config = {}) {
-	const { api, secret, timeout } = config
+  const { api, secret, timeout } = config
 
 	const axiosDefinition = {
     	baseURL: "https://www.binance.com/"
-  	}
+  }
 
-  	if (api) {
-    	axiosDefinition.headers = {'X-MBX-APIKEY': api}
+  if (api) {
+   	axiosDefinition.headers = {'X-MBX-APIKEY': api}
 	}
 
-  	if (timeout) {
-  		axiosDefinition.timeout = timeout
-  	}
+  if (timeout) {
+  	axiosDefinition.timeout = timeout
+  }
 
-  	return axios.create(axiosDefinition)
+  return axios.create(axiosDefinition)
 }
 
 module.exports = binanceRequest

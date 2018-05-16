@@ -13,6 +13,10 @@ class Binance {
         this.secret = this.checkKey(config.secret) // check of the secret key format
 		this.request = binanceRequest(config);
 	}
+
+    getRequest() {
+        return this.request;
+    }
     
     checkKey(key) {
         if (key && typeof key === "string" && key.length === 64) {
@@ -83,10 +87,10 @@ class Binance {
         return null
     }    
 
-	async get_ticker(symbol){			
-    	const url = 'api/v1/ticker/24hr';
-    	const { data } = await this.request.get(url, { params : { symbol: symbol }});
-    	return data;
+	async get_ticker(symbol) {			
+        const url = 'api/v1/ticker/24hr';
+        const { data } = await this.request.get(url, { params : { symbol: symbol }});
+        return data;
 	}
 
 	async get_order_book(symbol, limit = 50) {		

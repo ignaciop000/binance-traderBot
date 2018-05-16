@@ -4,6 +4,8 @@ const assert = require('assert')
 const expect = require('chai').expect
 const { Binance } = require('../binanceapi')
 const getSignature = require('../signature')
+const axios = require('axios');
+const MockAdapter = require('axios-mock-adapter');
 
 describe('Binance REST', function() {
   describe('checkKey', function() {
@@ -43,9 +45,6 @@ describe('Binance REST', function() {
         const val = new Binance().checkParams({api: "keyTest"}, ["api"])
         expect(val).to.be.null
       })
-
-
-
     })
 
     describe('Constructor', function() {
@@ -104,6 +103,14 @@ describe('Binance REST', function() {
       })
 /*
       it('Call method with secret key - should be ok', function(done) {
+
+        let mockAdapter = new MockAdapter(axios);
+
+         mockAdapter.onGet('https://www.binance.com/api/v3/allOrders').reply(200, {
+           data: {
+             posts: ['Intro to git']
+           }
+         });
         const conf = {
           api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
           secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
@@ -112,13 +119,13 @@ describe('Binance REST', function() {
         instance.allOrders({symbol: "BNBBTC"}).then((data) => {
           //TODO assert
           done();
-        }).catch((err) => {    
+        }).catch((err) => {
           console.log(err);
            done(new Error('Expected method to resolve'))
         });
                   
       })
-*/
+
       it('openOrders - should be ok', function(done) {
         const conf = {
           api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
@@ -150,8 +157,7 @@ describe('Binance REST', function() {
            done(new Error('Expected method to resolve'))
         });
                   
-      })
-/*      
+      })      
       it('cancel order - should be ok', function(done) {
         const conf = {
           api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",

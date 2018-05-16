@@ -21,7 +21,9 @@
     "sprintf-js": "^1.1.1"
   },
   "devDependencies": {
+    "axios-mock-adapter": "^1.15.0",
     "chai": "^4.1.2",
-    "mocha": "^4.0.1"
+    "mocha": "^4.0.1",
+    "socket.io-mock": "^1.2.3"
   }
 }

@@ -14,7 +14,7 @@ const WAIT_TIME_STOP_LOSS = 20000 // miliseconds
 class Trading {
 
 	constructor(io, option) {
-		console.log("options:", option);
+		//console.log("options:", option);
 		this.io = io;
 		this.option = option;
 		this.quantity = option.quantity;
@@ -48,6 +48,10 @@ class Trading {
     	this.commision = BNB_COMMISION		
 	}
 
+    getClient() {
+        return Orders;
+    }
+
 	async filters() {
         let symbol = this.option.symbol;
 
@@ -74,7 +78,7 @@ class Trading {
         let filters = await this.filters();
 
         //Order book prices
-        let last = await Orders.get_order_book(symbol)
+        let last = await Orders.get_order_book(symbol);
 
         let lastPrice = await Orders.get_ticker(symbol);
         if (lastPrice == null) {
@@ -200,13 +204,10 @@ class Trading {
             profitableSellingPrice = sellPrice
         }
 
-        // Screen log
-        if (this.option.prints && this.order_id == 0) {
-            let spreadPerc = (last.lastAsk/last.lastBid - 1) * 100.0
-			//#print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
-            //print('price: %.8f buyprice: %.8f sellprice: %.8f bid: %.8f ask: %.8f spread: %.2f Originalsellprice: %.8f' ,lastPrice, buyPrice, profitableSellingPrice, last.lastBid, last.lastAsk, spreadPerc, profitableSellingPrice-(last.lastBid *this.commision))
-            this.io.emit('update', {symbol:symbol, mode:this.option.mode, buyQty: format(this.quantity), increasing:format(this.increasing), decreasing:format(this.decreasing), profit: this.option.profit + '%', stopLoss: this.stop_loss ,lastPrice:format(lastPrice), buyPrice:format(buyPrice), profitableSellingPrice: format(profitableSellingPrice), lastBid: format(last.lastBid), lastAsk: format(last.lastAsk), spreadPerc: format(spreadPerc), originalsellprice: format(profitableSellingPrice-(last.lastBid *this.commision)) });
-		}
+        let spreadPerc = (last.lastAsk/last.lastBid - 1) * 100.0
+		//#print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
+        //print('price: %.8f buyprice: %.8f sellprice: %.8f bid: %.8f ask: %.8f spread: %.2f Originalsellprice: %.8f' ,lastPrice, buyPrice, profitableSellingPrice, last.lastBid, last.lastAsk, spreadPerc, profitableSellingPrice-(last.lastBid *this.commision))
+        this.io.emit('update', {symbol:symbol, mode:this.option.mode, buyQty: format(this.quantity), increasing:format(this.increasing), decreasing:format(this.decreasing), profit: this.option.profit + '%', stopLoss: this.stop_loss ,lastPrice:format(lastPrice), buyPrice:format(buyPrice), profitableSellingPrice: format(profitableSellingPrice), lastBid: format(last.lastBid), lastAsk: format(last.lastAsk), spreadPerc: format(spreadPerc), originalsellprice: format(profitableSellingPrice-(last.lastBid *this.commision)) });
         // analyze = threading.Thread(target=analyze, args=(symbol,))
         // analyze.start()
         

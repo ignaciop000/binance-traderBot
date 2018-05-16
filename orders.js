@@ -10,6 +10,10 @@ const conf = {
 
 const client = new Binance(conf);
 
+function getClient() {
+	return client;
+}
+
 async function get_ticker(symbol) { 
 	try {	
 		let response = await client.get_ticker(symbol);
@@ -29,7 +33,7 @@ async function get_order_book(symbol) {
 	    let lastAsk = parseFloat(response.asks[0][0]) //last sell price (ask)
 	 	return {lastAsk:lastAsk, lastBid:lastBid};
  	} catch (err) {
- 		console.log(err);
+ 		//console.log(err);
  		return {lastAsk:0, lastBid:0}; 
  	}
 }
@@ -48,7 +52,7 @@ async function get_info(symbol) {
         return response
             
  	} catch (err) {
- 		console.log(err);
+ 		return null;
  	}
 }
 
@@ -163,3 +167,4 @@ module.exports.sell_limit = sell_limit;
 module.exports.openOrders = openOrders;
 module.exports.get_products = get_products;
 module.exports.get_account = get_account;
+module.exports.getClient = getClient;
