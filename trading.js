@@ -163,7 +163,7 @@ class Trading {
     calc(lastBid){ 
         try {
             //Estimated sell price considering commision
-            return lastBid + (lastBid * this.option.profit / 100) + (lastBid *this.commision);
+            return lastBid + (lastBid * this.option.profit / 100) + (lastBid * this.commision);
             //return lastBid + (lastBid * self.option.profit / 100)
 
         } catch (err) {
@@ -239,7 +239,7 @@ class Trading {
 
         /*
         Did profit get caught
-        if ask price is greater than profit price, 
+        if ask price (Buy Price) is greater than profit price (sell Price + Profit + Commission), 
         buy with my buy price,    
         */
         if ((last.lastAsk >= profitableSellingPrice && this.option.mode == 'profit') || (lastPrice <= this.option.buyprice && this.option.mode == 'range')) {
