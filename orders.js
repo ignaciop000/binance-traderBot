@@ -4,8 +4,8 @@ const { BinanceWS } = api // websocket api
 const { print } = require('./utils');
  
 const conf = {
-	api: "",
-    secret: ""
+	api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
+    secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
 }
 
 const client = new Binance(conf);
@@ -33,8 +33,8 @@ async function get_order_book(symbol) {
 	    let lastAsk = parseFloat(response.asks[0][0]) //last sell price (ask)
 	 	return {lastAsk:lastAsk, lastBid:lastBid};
  	} catch (err) {
- 		//console.log(err);
- 		return {lastAsk:0, lastBid:0}; 
+ 		print('Invalid Order Book');
+ 		throw new Error('Invalid Order Book'); 		
  	}
 }
 
@@ -63,6 +63,10 @@ async function buy_limit(symbol, quantity, buyPrice) {
 		process.exit(1);
 	}
     // Buy order created.
+    if (!order.orderId) {
+    	print("Buy order without orderId");
+    	process.exit(1);	
+    }
     return order.orderId;
 }
 

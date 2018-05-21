@@ -241,9 +241,10 @@ class Trading {
         Did profit get caught
         if ask price (Buy Price) is greater than profit price (sell Price + Profit + Commission), 
         buy with my buy price,    
-        */
+        */        
+        //print ('%f >= %f %s',last.lastAsk,profitableSellingPrice,(last.lastAsk >= profitableSellingPrice));
         if ((last.lastAsk >= profitableSellingPrice && this.option.mode == 'profit') || (lastPrice <= this.option.buyprice && this.option.mode == 'range')) {
-            print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
+            //print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
 
             if (this.order_id == 0) {
                 let orderId = await this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
@@ -277,13 +278,12 @@ class Trading {
             //Database.write([orderId, symbol, 0, buyPrice, 'BUY', quantity, self.option.profit])
 
             //print('Buy order created id:%d, q:%.8f, p:%.8f' % (orderId, quantity, float(buyPrice)))
-            print('%s : Buy order created id:%d, q:%.8f, p:%.8f, Take profit aprox :%.8f' ,symbol, orderId, quantity, parseFloat(buyPrice), profitableSellingPrice)
+            print('%s : Buy order created id:%d, quantity:%.8f, buyPrice:%.8f, Take profit aprox :%.8f' ,symbol, orderId, quantity, parseFloat(buyPrice), profitableSellingPrice)
 
             this.order_id = orderId
             return orderId
 
         } catch (err) {
-            //print('bl: %s' % (e))
             print('Buy error: %s' , err)
             await wait(WAIT_TIME_BUY_SELL)
             return null
@@ -303,7 +303,7 @@ class Trading {
         orderDTO.statusBuy = buy_order.status;        
         if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
             //print('Buy order filled... Try sell...')
-            print('Buy order filled... Try sell...')
+            //print('Buy order filled... Try sell...')
         } else {
             await wait(WAIT_TIME_CHECK_BUY_SELL)
             if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
@@ -323,7 +323,7 @@ class Trading {
             }
         }
         let last = await Orders.get_order_book(symbol)
-        print("Profit:%.8f buyPrice:%.8f sellPrice:%.8f",format( quantity * ( last.lastAsk - buy_order.price)), buy_order.price, last.lastAsk);
+        //print("Market - Quantity:%.8f Profit:%.8f buyPrice:%.8f sellPrice:%.8f",quantity ,format( quantity * ( last.lastBid - buy_order.price)), buy_order.price, last.lastBid);
         let sell_order = null;
         if (this.sell_order_id == 0) {
             sell_order = await Orders.sell_limit(symbol, quantity, sell_price)        
@@ -348,7 +348,7 @@ class Trading {
 
             print('Sell order (Filled) Id: %d', this.sell_order_id)
             print('LastPrice : %.8f', last_price)
-            print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' , this.option.profit, parseFloat(sell_order.price), sell_price)
+            print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' , format( quantity * ( sell_price - sell_order.price)), parseFloat(sell_order.price), sell_price)
 
             this.order_id = 0
             this.sell_order_id = 0
@@ -478,6 +478,7 @@ class Trading {
     check_order() {
         // If there is an open order, exit.
         if (this.order_id > 0) {
+            print('Error, you have already open an order');
             process.exit(1);
         }
     }

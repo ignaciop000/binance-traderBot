@@ -5,6 +5,7 @@ let binanceRequest = require('./request');
 const { format, checkEnum } = require('./utils');
 const axios = require("axios");
 const getSignature = require('./signature');
+const fs = require('fs');
 
 class Binance {
 
@@ -90,18 +91,33 @@ class Binance {
 	async get_ticker(symbol) {			
         const url = 'api/v1/ticker/24hr';
         const { data } = await this.request.get(url, { params : { symbol: symbol }});
+        fs.writeFile((new Date).getTime()+'-ticker.resonse', JSON.stringify(data), function (err) {
+            if (err) {
+                return console.log(err);            
+            }
+        });
         return data;
 	}
 
 	async get_order_book(symbol, limit = 50) {		
     	const url = 'api/v1/depth';
     	const { data } = await this.request.get(url, { params : { symbol: symbol, limit: limit} });
+        fs.writeFile((new Date).getTime()+'-ordebook.resonse', JSON.stringify(data), function (err) {
+            if (err) {
+                return console.log(err);            
+            }
+        });
     	return data;    	
 	}
 
 	async get_exchange_info(symbol) {		
     	const url = 'api/v1/exchangeInfo';
     	const { data } = await this.request.get(url);
+        fs.writeFile((new Date).getTime()+'-exchange.resonse', JSON.stringify(data), function (err) {
+            if (err) {
+                return console.log(err);            
+            }
+        });
     	return data;
 	}
 
@@ -118,8 +134,13 @@ class Binance {
 
         const url = "api/v3/order"
         let query = this.makeQuery(url, params);
-        console.log(query);
-        const resp = await this.request.post(query);    
+        //console.log(query);
+        const resp = await this.request.post(query);   
+        fs.writeFile((new Date).getTime()+'-buy.resonse', JSON.stringify(resp.data), function (err) {
+            if (err) {
+                return console.log(err);            
+            }
+        }); 
         return resp.data;
 	}
 
@@ -132,7 +153,13 @@ class Binance {
 
         const url = 'api/v3/order';
         let query = this.makeQuery(url, params);
+        //console.log(query);
         const resp = await this.request.get(query);
+        fs.writeFile((new Date).getTime()+'-query.resonse', JSON.stringify(resp.data), function (err) {
+            if (err) {
+                return console.log(err);            
+            }
+        }); 
         return resp.data; 
 	}
 
@@ -208,6 +235,11 @@ class Binance {
         const url = 'api/v3/order';
         let query = this.makeQuery(url, params);
         const resp = await this.request.delete(query);
+        fs.writeFile((new Date).getTime()+'-cancel.resonse', JSON.stringify(resp.data), function (err) {
+            if (err) {
+                return console.log(err);            
+            }
+        }); 
         return resp.data;
     }
 
@@ -224,8 +256,13 @@ class Binance {
 
         const url = "api/v3/order"
         let query = this.makeQuery(url, params);
-        console.log(query);
+        //console.log(query);
         const resp = await this.request.post(query);    
+        fs.writeFile((new Date).getTime()+'-sell.resonse', JSON.stringify(resp.data), function (err) {
+            if (err) {
+                return console.log(err);            
+            }
+        }); 
         return resp.data;  
     }
 
