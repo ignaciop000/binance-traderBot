@@ -291,41 +291,44 @@ class Trading {
     }
 
     async sell(symbol, quantity, orderId, sell_price, last_price) {
-
-        /*
-        The specified limit will try to sell until it reaches.
-        If not successful, the order will be canceled.
-        */
+        
         let orderDTO = {};
-        let buy_order = await Orders.get_order(symbol, orderId)
-        orderDTO.symbol = symbol;
-        orderDTO.orderIdBuy = orderId;
-        orderDTO.statusBuy = buy_order.status;        
-        if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
-            //print('Buy order filled... Try sell...')
-            //print('Buy order filled... Try sell...')
-        } else {
-            await wait(WAIT_TIME_CHECK_BUY_SELL)
-            if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
-                //print('Buy order filled after 0.1 second... Try sell...')
-                print('Buy order filled after 0.1 second... Try sell...')
-            } else if (buy_order.status == 'PARTIALLY_FILLED' && buy_order.side == 'BUY') {
-                //print('Buy order partially filled... Try sell... Cancel remaining buy...')
-                print('Buy order partially filled... Try sell... Cancel remaining buy...')
-                await this.cancel(symbol, orderId)
-            } else {
-                await this.cancel(symbol, orderId)
-                //print('Buy order fail (Not filled) Cancel order...')
-                print('Buy order fail (Not filled) Cancel order...')
-                this.order_id = 0
-                this.io.emit('orders',orderDTO);
-                return
-            }
-        }
-        let last = await Orders.get_order_book(symbol)
-        //print("Market - Quantity:%.8f Profit:%.8f buyPrice:%.8f sellPrice:%.8f",quantity ,format( quantity * ( last.lastBid - buy_order.price)), buy_order.price, last.lastBid);
         let sell_order = null;
+        orderDTO.orderIdBuy = orderId;        
         if (this.sell_order_id == 0) {
+            /*
+            The specified limit will try to sell until it reaches.
+            If not successful, the order will be canceled.
+            */
+            let orderDTO = {};
+            let buy_order = await Orders.get_order(symbol, orderId)
+            orderDTO.symbol = symbol;
+            orderDTO.orderIdBuy = orderId;
+            orderDTO.statusBuy = buy_order.status;        
+            if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
+                //print('Buy order filled... Try sell...')
+                print('Buy order filled... Try sell...')
+            } else {
+                await wait(WAIT_TIME_CHECK_BUY_SELL)
+                if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
+                    //print('Buy order filled after 0.1 second... Try sell...')
+                    print('Buy order filled after 0.1 second... Try sell...')
+                } else if (buy_order.status == 'PARTIALLY_FILLED' && buy_order.side == 'BUY') {
+                    //print('Buy order partially filled... Try sell... Cancel remaining buy...')
+                    print('Buy order partially filled... Try sell... Cancel remaining buy...')
+                    await this.cancel(symbol, orderId)
+                } else {
+                    await this.cancel(symbol, orderId)
+                    //print('Buy order fail (Not filled) Cancel order...')
+                    print('Buy order fail (Not filled) Cancel order...')
+                    this.order_id = 0
+                    this.io.emit('orders',orderDTO);
+                    return
+                }
+            }
+            let last = await Orders.get_order_book(symbol)
+            //print("Market - Quantity:%.8f Profit:%.8f buyPrice:%.8f sellPrice:%.8f",quantity ,format( quantity * ( last.lastBid - buy_order.price)), buy_order.price, last.lastBid);
+                    
             sell_order = await Orders.sell_limit(symbol, quantity, sell_price)        
             orderDTO.sellPrice = sell_price;
             let sell_id = sell_order.orderId
@@ -356,6 +359,9 @@ class Trading {
             orderDTO.profit = format( quantity * ( sell_price - sell_order.price));
             this.io.emit('orders',orderDTO);
             return
+        } else {
+            orderDTO.statusSell = 'WAITING';
+            this.io.emit('orders',orderDTO);
         }
 
         /*
