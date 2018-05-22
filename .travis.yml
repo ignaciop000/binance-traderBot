@@ -7,5 +7,6 @@ install:
   - npm install -g codecov
   - npm install -g istanbul
 script:
+  - cross-env NODE_ENV=test
   - istanbul cover ./node_modules/mocha/bin/_mocha
   - codecov

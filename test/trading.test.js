@@ -3,10 +3,11 @@
 const assert = require('assert')
 const expect = require('chai').expect
 const { checkEnum } = require('./../utils');
-const { Trading } = require('./../trading');
+
 const MockAdapter = require('axios-mock-adapter');
 const Orders = require('./../orders');
 const SocketMock = require('socket.io-mock');
+const { Trading } = require('./../trading');
 
 
 describe('trading', function() {

@@ -5,7 +5,8 @@
   "main": "trader.js",
   "scripts": {
     "start": "node ./trader",
-    "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha"
+    "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha",
+    "cover": "cross-env NODE_ENV=test istanbul cover ./node_modules/.bin/_mocha"
   },
   "repository": {
     "type": "git",
