@@ -4,7 +4,8 @@
   "description": "",
   "main": "trader.js",
   "scripts": {
-    "test": "./node_modules/.bin/mocha"
+    "start": "node ./trader",
+    "test": "cross-env NODE_ENV=test ./node_modules/.bin/mocha"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "axios-mock-adapter": "^1.15.0",
     "chai": "^4.1.2",
+    "cross-env": "^5.1.5",
     "mocha": "^4.0.1",
     "socket.io-mock": "^1.2.3"
   }

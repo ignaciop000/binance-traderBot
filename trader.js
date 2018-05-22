@@ -9,6 +9,7 @@ const path    = require( 'path' );
 
 const trading_lib = require('./trading');
 const Orders = require('./orders');
+const coins = require('./coins');
 
 // use the bodyparser as a middleware  
 app.use(bodyParser.json())
@@ -64,81 +65,7 @@ http.listen(app.get( 'port' ), function(){
   console.log( 'Express server listening on port ' + app.get( 'port' ));
 });
 
-let optionsDefault = [
-{
-	symbol:'ZECBTC',
-	quantity:0,
-	stop_loss:0,
-	mode:'profit',
-	profit:1.0,
-	increasing:0.00000001,
-	decreasing:0.00000001,
-	loop:0,
-	wait_time:0.7,
-	prints: 1,
-},
-{
-	symbol:'ETHBTC',
-	quantity:0,
-	stop_loss:0,
-	mode:'profit',
-	profit:1.0,
-	increasing:0.00000001,
-	decreasing:0.00000001,
-	loop:0,
-	wait_time:0.7,
-	prints: 1,
-},
-{
-	symbol:'BCNBTC',
-	quantity:0,
-	stop_loss:0,
-	mode:'profit',
-	profit:1.5,
-	increasing:0.00000001,
-	decreasing:0.00000001,
-	loop:0,
-	wait_time:0.7,
-	prints: 1,
-},
-{
-	symbol:'EOSBTC',
-	quantity:0,
-	stop_loss:0,
-	mode:'profit',
-	profit:1.0,
-	increasing:0.00000001,
-	decreasing:0.00000001,
-	loop:0,
-	wait_time:0.7,
-	prints: 1,
-},
-{
-	symbol:'XVGBTC',
-	quantity:0,
-	stop_loss:0,
-	mode:'profit',
-	profit:1.0,
-	increasing:0.00000001,
-	decreasing:0.00000001,
-	loop:0,
-	wait_time:0.7,
-	prints: 1,
-},
-{
-	symbol:'PPTBTC',
-	quantity:0,
-	stop_loss:0,
-	mode:'profit',
-	profit:1.0,
-	increasing:0.00000001,
-	decreasing:0.00000001,
-	loop:0,
-	wait_time:0.7,
-	prints: 1,
-}
-];
-
+let optionsDefault = coins;
 
 optionsDefault.forEach(function (optionDefault) {	
 	var trading = new trading_lib.Trading(io, optionDefault);

@@ -512,8 +512,7 @@ class Trading {
         let actions = [];
 
         let symbol = this.option.symbol;
-
-        print('Auto Trading for Binance.com. @yasinkuyu Thrashformer');
+        
         // Validate symbol
         await this.validate();
 

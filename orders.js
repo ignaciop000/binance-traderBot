@@ -2,10 +2,15 @@ const api = require('./binanceapi');
 const { Binance } = api // rest api
 const { BinanceWS } = api // websocket api
 const { print } = require('./utils');
+let env = '';
+if (process.env.NODE_ENV) {
+	env = '.'+process.env.NODE_ENV;
+}
+const config = require('./config'+env);
  
 const conf = {
-	api: "vmPUZE6mv9SD5VNHk4HlWFsOr6aKE2zvsw0MuIgwCIPy6utIco14y7Ju91duEh8A",
-    secret: "NhqPtmdSJYdKjVHjA7PZj4Mge3R5YNiP1e3UZjInClVN65XAbvqqM6A7H5fATj0j"
+	api: config.api,
+    secret: config.secret
 }
 
 const client = new Binance(conf);
