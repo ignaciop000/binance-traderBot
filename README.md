@@ -23,7 +23,7 @@ This is a bot for auto trading the binance.com exchange based on https://github.
         
 ## Requirements
 
-	NodeJs (https://nodejs.org/en/)
+	[NodeJs](https://nodejs.org/en/)
 
 ## Installation
 
