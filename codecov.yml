@@ -1,4 +1,4 @@
 coverage:
   parsers:
     javascript:
-      enable_partials: no
+      enable_partials: yes
