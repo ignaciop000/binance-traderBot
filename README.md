@@ -106,4 +106,10 @@ This is a bot for auto trading the binance.com exchange based on https://github.
     
     Thanks all for your contributions...    
 
+## Donate
+	If this bot get some profit or if you want contribute with some coins to test feel free to donate
+
+	ETH: 0x09d70c877e5656adebb4e01e5d4ad7bc04d09e57
+	BTC: 1HKnqo9MM8AZY2jVcnoFLkVsN7ChoXBCHL
+	LTC: LVfyupcANzMQhJHCjetomGiq3rrB43r2uo
 ---
