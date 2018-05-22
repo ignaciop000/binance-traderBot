@@ -1,5 +1,8 @@
 # Binance Trader Bot (NodeJS)
 
+[![Build Status](https://travis-ci.org/ignaciop000/binance-traderBot.svg?branch=master)](https://travis-ci.org/ignaciop000/binance-traderBot)
+[![codecov](https://codecov.io/gh/ignaciop000/binance-traderBot/branch/master/graph/badge.svg)](https://codecov.io/gh/ignaciop000/binance-traderBot)
+
 This is a bot for auto trading the binance.com exchange based on https://github.com/yasinkuyu/binance-trader
 
 ![Screenshot](https://github.com/ignaciop000/binance-traderBot/blob/master/img/screenshot.png)
