@@ -13,7 +13,8 @@ This is a bot for auto trading the binance.com exchange based on https://github.
         [✓] Read Info [✓] Enable Trading [X] Enable Withdrawals
 
 1. Get an API and Secret Key, insert into `config.js`
-        {
+
+		{
 			api: "<API key for account access>",
     		secret: "<Secret key for account access>"
 		}
@@ -36,31 +37,32 @@ This is a bot for auto trading the binance.com exchange based on https://github.
     
     Example coins.js 
 
-[
-{
-	symbol:'ZECBTC',
-	quantity:0,
-	stop_loss:0,
-	mode:'profit',
-	profit:1.0,
-	increasing:0.00000001,
-	decreasing:0.00000001,
-	loop:0,
-	wait_time:0.7,
-	prints: 1,
-},
-{
-	symbol:'ETHBTC',
-	quantity:0,
-	stop_loss:0,
-	mode:'profit',
-	profit:1.0,
-	increasing:0.00000001,
-	decreasing:0.00000001,
-	loop:0,
-	wait_time:0.7,
-	prints: 1,
-}]
+	[
+		{
+			symbol:'ZECBTC',
+			quantity:0,
+			stop_loss:0,
+			mode:'profit',
+			profit:1.0,
+			increasing:0.00000001,
+			decreasing:0.00000001,
+			loop:0,
+			wait_time:0.7,
+			prints: 1,
+		},
+		{
+			symbol:'ETHBTC',
+			quantity:0,
+			stop_loss:0,
+			mode:'profit',
+			profit:1.0,
+			increasing:0.00000001,
+			decreasing:0.00000001,
+			loop:0,
+			wait_time:0.7,
+			prints: 1,
+		}
+	]
 
 	quantity     Buy/Sell Quantity (default 0) (If zero, auto calc)
     amount       Buy/Sell BTC Amount (default 0)
