@@ -20,9 +20,13 @@ class Trading {
         this.quantity = option.quantity;
         this.stop_loss = option.stop_loss;
         this.increasing = option.increasing;
-        this.decreasing = option.decreasing;    
-        this.wait_time = option.wait_time;  
-
+        this.decreasing = option.decreasing;   
+        if (option.wait_time == null) {
+            this.wait_time = 0.7 * 1000;      
+        } else { 
+            this.wait_time = option.wait_time * 1000;  
+        }
+        
         // Define trade vars  
         this.order_id = 0;
         this.order_data = null;
@@ -550,9 +554,7 @@ class Trading {
 
             await this.action(symbol);
             endTime = new Date().getTime();
-
             if (endTime - startTime < this.wait_time) {
-
                await wait(this.wait_time - (endTime - startTime))
 
                // 0 = Unlimited loop
