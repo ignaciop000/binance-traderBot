@@ -105,6 +105,8 @@ new BinanceWS().initSocket("!ticker@arr", function(msg) {
               if (ten_second_price_diff > TEN_S_PRICE_DIFFERENCE_THRESHOLD) {
                 print("PRICE AND VOL! - SYM: %s P DIFF: %.8f DIFF: %.8f VOL: %.8f",stored_currency.symbol,priceDiff, volDiff, objCurrency.volume);  
               }
+              stored_currency.ten_sec_start_bid_price = objCurrency.bid_price
+              stored_currency.ten_sec_time_stamp = ct
             }
 
             stored_currency.bid_price = objCurrency.bid_price

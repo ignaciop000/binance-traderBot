@@ -26,7 +26,7 @@ async function get_ticker(symbol) {
 		return response.lastPrice;
 	} catch (err) {
 		//console.log(err);
-		return null;
+		throw new Error('Invalid get_ticker'); 
 	}
 }
 
@@ -87,7 +87,7 @@ async function get_order(symbol, orderId) {
         return order
     } catch (err) {
         print('get_order Exception: %s' , err);
-        return false
+        throw new Error('Invalid get_order'); 
     }
 }
 
@@ -107,7 +107,7 @@ async function cancel_order(symbol, orderId) {
         
         } catch (err) {
             print('cancel_order Exception: %s' , err)
-            return false
+            throw new Error('Invalid cancel_order'); 
         }
 }
 

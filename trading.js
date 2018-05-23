@@ -77,85 +77,90 @@ class Trading {
 
 
     async validate() {
-        let valid = true;
-        let symbol = this.option.symbol;
-        let filters = await this.filters();
+        try {
+            let valid = true;
+            let symbol = this.option.symbol;
+            let filters = await this.filters();
 
-        //Order book prices
-        let last = await Orders.get_order_book(symbol);
+            //Order book prices
+            let last = await Orders.get_order_book(symbol);
 
-        let lastPrice = await Orders.get_ticker(symbol);
-        if (lastPrice == null) {
-            print ('Error, getting lastPrice');
-            valid = false;
-        }
-        let minQty = parseFloat(filters.LOT_SIZE.minQty)
-        let minPrice = parseFloat(filters.PRICE_FILTER.minPrice)
-        let minNotional = parseFloat(filters.MIN_NOTIONAL.minNotional)
-        let quantity = parseFloat(this.option.quantity)
+            let lastPrice = await Orders.get_ticker(symbol);
+            if (lastPrice == null) {
+                print ('Error, getting lastPrice');
+                valid = false;
+            }
+            let minQty = parseFloat(filters.LOT_SIZE.minQty)
+            let minPrice = parseFloat(filters.PRICE_FILTER.minPrice)
+            let minNotional = parseFloat(filters.MIN_NOTIONAL.minNotional)
+            let quantity = parseFloat(this.option.quantity)
 
-        //stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
-        let stepSize = parseFloat(filters.LOT_SIZE.stepSize)
+            //stepSize defines the intervals that a quantity/icebergQty can be increased/decreased by.
+            let stepSize = parseFloat(filters.LOT_SIZE.stepSize)
 
-        //tickSize defines the intervals that a price/stopPrice can be increased/decreased by
-        let tickSize = parseFloat(filters.PRICE_FILTER.tickSize)
+            //tickSize defines the intervals that a price/stopPrice can be increased/decreased by
+            let tickSize = parseFloat(filters.PRICE_FILTER.tickSize)
 
-        //If option increasing default tickSize greater than
-        if (parseFloat(this.option.increasing) < tickSize){
-            this.increasing = tickSize
-        }
+            //If option increasing default tickSize greater than
+            if (parseFloat(this.option.increasing) < tickSize){
+                this.increasing = tickSize
+            }
 
-        //If option decreasing default tickSize greater than
-        if (parseFloat(this.option.decreasing) < tickSize){
-            this.decreasing = tickSize
-        }
+            //If option decreasing default tickSize greater than
+            if (parseFloat(this.option.decreasing) < tickSize){
+                this.decreasing = tickSize
+            }
 
-        // Just for validation
-        last.lastBid = last.lastBid + this.increasing
+            // Just for validation
+            last.lastBid = last.lastBid + this.increasing
 
-        // Set static
-        // If quantity or amount is zero, minNotional increase 10%
-        quantity = (minNotional / last.lastBid)
-        quantity = quantity + (quantity * 10 / 100)
-        let notional = minNotional
+            // Set static
+            // If quantity or amount is zero, minNotional increase 10%
+            quantity = (minNotional / last.lastBid)
+            quantity = quantity + (quantity * 10 / 100)
+            let notional = minNotional
 
-        if (this.amount > 0) {
-            // Calculate amount to quantity
-            quantity = (this.amount / lastBid)
-        }
-        if (this.quantity > 0) {
-            // Format quantity step
-            quantity = this.quantity
-        }
-        quantity = this.format_step(quantity, stepSize)
-        notional = last.lastBid * parseFloat(quantity)
+            if (this.amount > 0) {
+                // Calculate amount to quantity
+                quantity = (this.amount / lastBid)
+            }
+            if (this.quantity > 0) {
+                // Format quantity step
+                quantity = this.quantity
+            }
+            quantity = this.format_step(quantity, stepSize)
+            notional = last.lastBid * parseFloat(quantity)
 
-        // Set Globals
-        this.quantity = quantity
-        this.step_size = stepSize
+            // Set Globals
+            this.quantity = quantity
+            this.step_size = stepSize
 
-        // minQty = minimum order quantity
-        if (quantity < minQty) {
-            //print('Invalid quantity, minQty: %.8f (u: %.8f)' % (minQty, quantity))
-            print('Invalid quantity, minQty: %.8f (u: %.8f)' , minQty, quantity)
-            valid = false
-        }
+            // minQty = minimum order quantity
+            if (quantity < minQty) {
+                //print('Invalid quantity, minQty: %.8f (u: %.8f)' % (minQty, quantity))
+                print('Invalid quantity, minQty: %.8f (u: %.8f)' , minQty, quantity)
+                valid = false
+            }
 
-        if (lastPrice < minPrice) {
-            //print('Invalid price, minPrice: %.8f (u: %.8f)' % (minPrice, lastPrice))
-            print('Invalid price, minPrice: %.8f (u: %.8f)' , minPrice, lastPrice)
-            valid = false
-        }
+            if (lastPrice < minPrice) {
+                //print('Invalid price, minPrice: %.8f (u: %.8f)' % (minPrice, lastPrice))
+                print('Invalid price, minPrice: %.8f (u: %.8f)' , minPrice, lastPrice)
+                valid = false
+            }
 
-        //minNotional = minimum order value (price * quantity)
-        if (notional < minNotional) {
-            //print('Invalid notional, minNotional: %.8f (u: %.8f)' % (minNotional, notional))
-            print('Invalid notional, minNotional: %.8f (u: %.8f)' ,minNotional, notional)
-            valid = false
-        }
+            //minNotional = minimum order value (price * quantity)
+            if (notional < minNotional) {
+                //print('Invalid notional, minNotional: %.8f (u: %.8f)' % (minNotional, notional))
+                print('Invalid notional, minNotional: %.8f (u: %.8f)' ,minNotional, notional)
+                valid = false
+            }
 
-        if (!valid) {
-            process.exit(1)
+            if (!valid) {
+                process.exit(1)
+            }
+        } catch (err) {
+            print("Error Validate %s", err);
+            process.exit(1);
         }
         
     }
@@ -171,100 +176,104 @@ class Trading {
             //return lastBid + (lastBid * self.option.profit / 100)
 
         } catch (err) {
-            print('Calc Error: %s', e);
+            print('Calc Error: %s', err);
             return
         }
     }
 
     async action(symbol) {
-        //import ipdb; ipdb.set_trace()
+        try {
+            //import ipdb; ipdb.set_trace()
 
-        //Order amount
-        let quantity = this.quantity;
+            //Order amount
+            let quantity = this.quantity;
 
-        //Fetches the ticker price
-        let lastPrice = await Orders.get_ticker(symbol);
-        if (lastPrice == null) {
-            print('Error, getting lastPrice');
-            return;
-        }
-
-        // Order book prices
-        let last = await Orders.get_order_book(symbol)
-
-        //Target buy price, add little increase #87
-        let buyPrice = last.lastBid + this.increasing
-
-        //Target sell price, decrease little 
-        let sellPrice = last.lastAsk - this.decreasing
-
-        // Spread ( profit )
-        let profitableSellingPrice = this.calc(last.lastBid)
-
-        // Check working mode
-        if (this.option.mode == 'range') {
-            buyPrice = this.option.buyprice
-            sellPrice = this.option.sellprice
-            profitableSellingPrice = sellPrice
-        }
-
-        let spreadPerc = (last.lastAsk/last.lastBid - 1) * 100.0
-        //#print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
-        //print('price: %.8f buyprice: %.8f sellprice: %.8f bid: %.8f ask: %.8f spread: %.2f Originalsellprice: %.8f' ,lastPrice, buyPrice, profitableSellingPrice, last.lastBid, last.lastAsk, spreadPerc, profitableSellingPrice-(last.lastBid *this.commision))
-        this.io.emit('update', {symbol:symbol, mode:this.option.mode, buyQty: format(this.quantity), increasing:format(this.increasing), decreasing:format(this.decreasing), profit: this.option.profit + '%', stopLoss: this.stop_loss ,lastPrice:format(lastPrice), buyPrice:format(buyPrice), profitableSellingPrice: format(profitableSellingPrice), lastBid: format(last.lastBid), lastAsk: format(last.lastAsk), spreadPerc: format(spreadPerc), originalsellprice: format(profitableSellingPrice-(last.lastBid *this.commision)) });
-        // analyze = threading.Thread(target=analyze, args=(symbol,))
-        // analyze.start()
-        
-
-        if (this.order_id > 0) {
-            //Profit mode
-            if (this.order_data != null) {
-
-                order = this.order_data
-
-                // Last control
-                let newProfitableSellingPrice = this.calc(parseFloat(order.price))
-
-                if (last.lastAsk >= newProfitableSellingPrice){
-                    profitableSellingPrice = newProfitableSellingPrice
-                }
+            //Fetches the ticker price
+            let lastPrice = await Orders.get_ticker(symbol);
+            if (lastPrice == null) {
+                print('Error, getting lastPrice');
+                return;
             }
-            //range mode
+
+            // Order book prices
+            let last = await Orders.get_order_book(symbol)
+
+            //Target buy price, add little increase #87
+            let buyPrice = last.lastBid + this.increasing
+
+            //Target sell price, decrease little 
+            let sellPrice = last.lastAsk - this.decreasing
+
+            // Spread ( profit )
+            let profitableSellingPrice = this.calc(last.lastBid)
+
+            // Check working mode
             if (this.option.mode == 'range') {
-                profitableSellingPrice = this.option.sellprice
+                buyPrice = this.option.buyprice
+                sellPrice = this.option.sellprice
+                profitableSellingPrice = sellPrice
             }
-                       
-            // If the order is complete, try to sell it.            
 
-            // Perform buy action
-            await this.sell(symbol, quantity, this.order_id, profitableSellingPrice, lastPrice);            
-            return
-        }
+            let spreadPerc = (last.lastAsk/last.lastBid - 1) * 100.0
+            //#print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
+            //print('price: %.8f buyprice: %.8f sellprice: %.8f bid: %.8f ask: %.8f spread: %.2f Originalsellprice: %.8f' ,lastPrice, buyPrice, profitableSellingPrice, last.lastBid, last.lastAsk, spreadPerc, profitableSellingPrice-(last.lastBid *this.commision))
+            this.io.emit('update', {symbol:symbol, mode:this.option.mode, buyQty: format(this.quantity), increasing:format(this.increasing), decreasing:format(this.decreasing), profit: this.option.profit + '%', stopLoss: this.stop_loss ,lastPrice:format(lastPrice), buyPrice:format(buyPrice), profitableSellingPrice: format(profitableSellingPrice), lastBid: format(last.lastBid), lastAsk: format(last.lastAsk), spreadPerc: format(spreadPerc), originalsellprice: format(profitableSellingPrice-(last.lastBid *this.commision)) });
+            // analyze = threading.Thread(target=analyze, args=(symbol,))
+            // analyze.start()
+            
 
-        /*
-        Did profit get caught
-        if ask price (Buy Price) is greater than profit price (sell Price + Profit + Commission), 
-        buy with my buy price,    
-        */        
-        //print ('%f >= %f %s',last.lastAsk,profitableSellingPrice,(last.lastAsk >= profitableSellingPrice));
-        if ((last.lastAsk >= profitableSellingPrice && this.option.mode == 'profit') || (lastPrice <= this.option.buyprice && this.option.mode == 'range')) {
-            //print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
+            if (this.order_id > 0) {
+                //Profit mode
+                if (this.order_data != null) {
 
-            if (this.order_id == 0) {
-                let orderId = await this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
-                let orderDTO = {};
-                orderDTO.symbol = symbol; 
-                orderDTO.orderIdBuy = this.order_id;
-                orderDTO.buyPrice = format(buyPrice);
-                orderDTO.quantity = quantity;
-                this.io.emit('orders',orderDTO);
+                    order = this.order_data
 
-                //this.io.emit('orders',{action:'buy',orderId: this.order_id, symbol: symbol, quantity: quantity, buyPrice: format(buyPrice), profitableSellingPrice: format(profitableSellingPrice)});
+                    // Last control
+                    let newProfitableSellingPrice = this.calc(parseFloat(order.price))
 
-                //# Perform check/sell action
-                //# checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
-                //# checkAction.start()
-            }          
+                    if (last.lastAsk >= newProfitableSellingPrice){
+                        profitableSellingPrice = newProfitableSellingPrice
+                    }
+                }
+                //range mode
+                if (this.option.mode == 'range') {
+                    profitableSellingPrice = this.option.sellprice
+                }
+                           
+                // If the order is complete, try to sell it.            
+
+                // Perform buy action
+                await this.sell(symbol, quantity, this.order_id, profitableSellingPrice, lastPrice);            
+                return
+            }
+
+            /*
+            Did profit get caught
+            if ask price (Buy Price) is greater than profit price (sell Price + Profit + Commission), 
+            buy with my buy price,    
+            */        
+            //print ('%f >= %f %s',last.lastAsk,profitableSellingPrice,(last.lastAsk >= profitableSellingPrice));
+            if ((last.lastAsk >= profitableSellingPrice && this.option.mode == 'profit') || (lastPrice <= this.option.buyprice && this.option.mode == 'range')) {
+                //print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
+
+                if (this.order_id == 0) {
+                    let orderId = await this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
+                    let orderDTO = {};
+                    orderDTO.symbol = symbol; 
+                    orderDTO.orderIdBuy = this.order_id;
+                    orderDTO.buyPrice = format(buyPrice);
+                    orderDTO.quantity = quantity;
+                    this.io.emit('orders',orderDTO);
+
+                    //this.io.emit('orders',{action:'buy',orderId: this.order_id, symbol: symbol, quantity: quantity, buyPrice: format(buyPrice), profitableSellingPrice: format(profitableSellingPrice)});
+
+                    //# Perform check/sell action
+                    //# checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
+                    //# checkAction.start()
+                }          
+            }
+        } catch (err) {
+            print("Error action %s", err);
         }
     }
 
@@ -412,7 +421,7 @@ class Trading {
             }
 
             this.order_id = 0
-            this.order_data = None
+            this.order_data = null
 
         } 
         this.io.emit('orders',orderDTO);        
@@ -500,7 +509,7 @@ class Trading {
 
         if (!check_order) {
             this.order_id = 0
-            this.order_data = None
+            this.order_data = null
             return true
         }
 
