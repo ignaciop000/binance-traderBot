@@ -3,16 +3,18 @@
 const assert = require('assert')
 const expect = require('chai').expect
 const { checkEnum } = require('./../utils');
-const { Trading } = require('./../trading');
+
 const MockAdapter = require('axios-mock-adapter');
 const Orders = require('./../orders');
 const SocketMock = require('socket.io-mock');
+const { Trading } = require('./../trading');
 
 
 describe('trading', function() {
 	this.timeout(30000)
 
 	describe('action', function() {	
+		/*
     	it('BCNBTC - Real - Buy (FILLED) -> Sell', async function() {
     		let socket = new SocketMock();
     		socket.on('update', function (message) {    			
@@ -54,8 +56,83 @@ describe('trading', function() {
 			await trading.action(trading.option.symbol);
 			await trading.action(trading.option.symbol);
     	});
+    	*/
+    	it('BCNBTC - Real - Cancel Order', async function() {
+    		let socket = new SocketMock();
+    		socket.on('update', function (message) {    			
+            	//console.log('onUpdate',message);
+        	});
+    		socket.on('orders', function (message) {
+            	//console.log('onOrders',message);
+        	});        	
+    		let trading = new Trading(socket.socketClient, {
+				symbol:'BCNBTC',
+				quantity:0,
+				stop_loss:0,
+				mode:'profit',
+				profit:1.0,
+				increasing:0.00000001,
+				decreasing:0.00000001,
+				loop:0,
+				wait_time:0.7,
+				prints: 1,
+			});
+			let mockAdapter = new MockAdapter(trading.getClient().getClient().getRequest());
+			mockAdapter.reset();
+			mockAdapter.onGet('https://www.binance.com/api/v1/ticker/24hr', { params: {symbol:'BCNBTC'}}).reply(200, {"lastPrice":"0.00000105"});
+			mockAdapter.onGet('https://www.binance.com/api/v1/exchangeInfo').reply(200, {"timezone":"UTC","serverTime":1526492176825,"rateLimits":[{"rateLimitType":"REQUESTS","interval":"MINUTE","limit":1200},{"rateLimitType":"ORDERS","interval":"SECOND","limit":10},{"rateLimitType":"ORDERS","interval":"DAY","limit":100000}],"exchangeFilters":[],"symbols":[{"symbol":"BCNBTC","status":"TRADING","baseAsset":"BCN","baseAssetPrecision":8,"quoteAsset":"BTC","quotePrecision":8,"orderTypes":["LIMIT","LIMIT_MAKER","MARKET","STOP_LOSS_LIMIT","TAKE_PROFIT_LIMIT"],"icebergAllowed":false,"filters":[{"filterType":"PRICE_FILTER","minPrice":"0.00000001","maxPrice":"100000.00000000","tickSize":"0.00000001"},{"filterType":"LOT_SIZE","minQty":"1.00000000","maxQty":"90000000.00000000","stepSize":"1.00000000"},{"filterType":"MIN_NOTIONAL","minNotional":"0.0009150"}]}]});
+			mockAdapter.onGet('https://www.binance.com/api/v1/depth', { params: { symbol: 'BCNBTC', limit: 5 }}).replyOnce(200, {"lastUpdateId":8536591,"bids":[["0.00000104","15801275.00000000",[]]],"asks":[["0.00000106","10402294.00000000",[]]]});
+			mockAdapter.onGet('https://www.binance.com/api/v1/depth', { params: { symbol: 'BCNBTC', limit: 5 }}).replyOnce(200, {"lastUpdateId":8536591,"bids":[["0.00000104","15801275.00000000",[]]],"asks":[["0.00000106","10402294.00000000",[]]]});
+			mockAdapter.onGet('https://www.binance.com/api/v1/depth', { params: { symbol: 'BCNBTC', limit: 5 }}).replyOnce(200, {"lastUpdateId":8536618,"bids":[["0.00000105","57371.00000000",[]]],"asks":[["0.00000106","10412143.00000000",[]]]});
+			mockAdapter.onPost(/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5569742,"transactTime":1526951032566,"price":"0.00000105","origQty":"1037.00000000","executedQty":"0.00000000","status":"NEW","timeInForce":"GTC","type":"LIMIT","side":"BUY"});
+			mockAdapter.onGet(/api\/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5569742,"price":"0.00000105","origQty":"1037.00000000","executedQty":"0.00000000","status":"NEW","timeInForce":"GTC","type":"LIMIT","side":"BUY","stopPrice":"0.00000000","icebergQty":"0.00000000","time":1526951032566,"isWorking":true});
+			mockAdapter.onGet(/api\/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5569742,"price":"0.00000105","origQty":"1037.00000000","executedQty":"0.00000000","status":"NEW","timeInForce":"GTC","type":"LIMIT","side":"BUY","stopPrice":"0.00000000","icebergQty":"0.00000000","time":1526951032566,"isWorking":true});			
+			mockAdapter.onDelete(/api\/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5569742,"clientOrderId":"PKCzdPbM9nj59wlT6bOIyb"});			
+			await trading.validate();
+			await trading.action(trading.option.symbol);
+			await trading.action(trading.option.symbol);			
+    	});    	
+    	it('BCNBTC - Real - Buy Order and wait', async function() {
+    		let socket = new SocketMock();
+    		socket.on('update', function (message) {    			
+            	//console.log('onUpdate',message);
+        	});
+    		socket.on('orders', function (message) {
+            	//console.log('onOrders',message);
+        	});        	
+    		let trading = new Trading(socket.socketClient, {
+				symbol:'BCNBTC',
+				quantity:0,
+				stop_loss:0,
+				mode:'profit',
+				profit:1.0,
+				increasing:0.00000001,
+				decreasing:0.00000001,
+				loop:0,
+				wait_time:0.7,
+				prints: 1,
+			});
+			let mockAdapter = new MockAdapter(trading.getClient().getClient().getRequest());
+			mockAdapter.reset();
+			mockAdapter.onGet('https://www.binance.com/api/v1/ticker/24hr', { params: {symbol:'BCNBTC'}}).reply(200, {"lastPrice":"0.00000104"});
+			mockAdapter.onGet('https://www.binance.com/api/v1/exchangeInfo').reply(200, {"timezone":"UTC","serverTime":1526492176825,"rateLimits":[{"rateLimitType":"REQUESTS","interval":"MINUTE","limit":1200},{"rateLimitType":"ORDERS","interval":"SECOND","limit":10},{"rateLimitType":"ORDERS","interval":"DAY","limit":100000}],"exchangeFilters":[],"symbols":[{"symbol":"BCNBTC","status":"TRADING","baseAsset":"BCN","baseAssetPrecision":8,"quoteAsset":"BTC","quotePrecision":8,"orderTypes":["LIMIT","LIMIT_MAKER","MARKET","STOP_LOSS_LIMIT","TAKE_PROFIT_LIMIT"],"icebergAllowed":false,"filters":[{"filterType":"PRICE_FILTER","minPrice":"0.00000001","maxPrice":"100000.00000000","tickSize":"0.00000001"},{"filterType":"LOT_SIZE","minQty":"1.00000000","maxQty":"90000000.00000000","stepSize":"1.00000000"},{"filterType":"MIN_NOTIONAL","minNotional":"0.0009150"}]}]});
+			mockAdapter.onGet('https://www.binance.com/api/v1/depth', { params: { symbol: 'BCNBTC', limit: 5 }}).replyOnce(200, {"lastUpdateId":8556230,"bids":[["0.00000103","11262645.00000000",[]],["0.00000102","14315062.00000000",[]],["0.00000101","16115926.00000000",[]],["0.00000100","29154628.00000000",[]],["0.00000099","7830776.00000000",[]]],"asks":[["0.00000105","10912500.00000000",[]],["0.00000106","9010746.00000000",[]],["0.00000107","14129437.00000000",[]],["0.00000108","13130855.00000000",[]],["0.00000109","13408497.00000000",[]]]});
+			mockAdapter.onGet('https://www.binance.com/api/v1/depth', { params: { symbol: 'BCNBTC', limit: 5 }}).replyOnce(200, {"lastUpdateId":8556230,"bids":[["0.00000103","11262645.00000000",[]],["0.00000102","14315062.00000000",[]],["0.00000101","16115926.00000000",[]],["0.00000100","29154628.00000000",[]],["0.00000099","7830776.00000000",[]]],"asks":[["0.00000105","10912500.00000000",[]],["0.00000106","9010746.00000000",[]],["0.00000107","14129437.00000000",[]],["0.00000108","13130855.00000000",[]],["0.00000109","13408497.00000000",[]]]});
+			mockAdapter.onGet('https://www.binance.com/api/v1/depth', { params: { symbol: 'BCNBTC', limit: 5 }}).replyOnce(200, {"lastUpdateId":8556230,"bids":[["0.00000103","11262645.00000000",[]],["0.00000102","14315062.00000000",[]],["0.00000101","16115926.00000000",[]],["0.00000100","29154628.00000000",[]],["0.00000099","7830776.00000000",[]]],"asks":[["0.00000105","10912500.00000000",[]],["0.00000106","9010746.00000000",[]],["0.00000107","14129437.00000000",[]],["0.00000108","13130855.00000000",[]],["0.00000109","13408497.00000000",[]]]});
+			mockAdapter.onGet('https://www.binance.com/api/v1/depth', { params: { symbol: 'BCNBTC', limit: 5 }}).replyOnce(200, {"lastUpdateId":8556230,"bids":[["0.00000103","11262645.00000000",[]],["0.00000102","14315062.00000000",[]],["0.00000101","16115926.00000000",[]],["0.00000100","29154628.00000000",[]],["0.00000099","7830776.00000000",[]]],"asks":[["0.00000105","10912500.00000000",[]],["0.00000106","9010746.00000000",[]],["0.00000107","14129437.00000000",[]],["0.00000108","13130855.00000000",[]],["0.00000109","13408497.00000000",[]]]});
+			mockAdapter.onGet('https://www.binance.com/api/v1/depth', { params: { symbol: 'BCNBTC', limit: 5 }}).replyOnce(200, {"lastUpdateId":8556230,"bids":[["0.00000103","11262645.00000000",[]],["0.00000102","14315062.00000000",[]],["0.00000101","16115926.00000000",[]],["0.00000100","29154628.00000000",[]],["0.00000099","7830776.00000000",[]]],"asks":[["0.00000105","10912500.00000000",[]],["0.00000106","9010746.00000000",[]],["0.00000107","14129437.00000000",[]],["0.00000108","13130855.00000000",[]],["0.00000109","13408497.00000000",[]]]});
+			mockAdapter.onPost(/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5581947,"transactTime":1526955663404,"price":"0.00000104","origQty":"1037.00000000","executedQty":"0.00000000","status":"NEW","timeInForce":"GTC","type":"LIMIT","side":"BUY"});
+			mockAdapter.onPost(/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5581962,"price":"0.00000106","origQty":"1037.00000000","executedQty":"0.00000000","status":"NEW","timeInForce":"GTC","type":"LIMIT","side":"SELL","stopPrice":"0.00000000","icebergQty":"0.00000000","time":1526955665421,"isWorking":true});
+			mockAdapter.onGet(/api\/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5581947,"price":"0.00000104","origQty":"1037.00000000","executedQty":"1037.00000000","status":"FILLED","timeInForce":"GTC","type":"LIMIT","side":"BUY","stopPrice":"0.00000000","icebergQty":"0.00000000","time":1526955663404,"isWorking":true});
+			mockAdapter.onGet(/api\/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5581962,"price":"0.00000106","origQty":"1037.00000000","executedQty":"0.00000000","status":"NEW","timeInForce":"GTC","type":"LIMIT","side":"SELL","stopPrice":"0.00000000","icebergQty":"0.00000000","time":1526955665421,"isWorking":true});
+			//mockAdapter.onGet(/api\/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","orderId":5581947,"clientOrderId":"YfySzzBHsi1GxhL1qsq3t7","price":"0.00000104","origQty":"1037.00000000","executedQty":"1037.00000000","status":"FILLED","timeInForce":"GTC","type":"LIMIT","side":"BUY","stopPrice":"0.00000000","icebergQty":"0.00000000","time":1526955663404,"isWorking":true});			
+			//mockAdapter.onDelete(/api\/v3\/order/).replyOnce(200, {"symbol":"BCNBTC","origClientOrderId":"P9TXwOEIbILAxfA4EWqWjh","orderId":5569742,"clientOrderId":"PKCzdPbM9nj59wlT6bOIyb"});			
+			await trading.validate();
+			await trading.action(trading.option.symbol);
+			await trading.action(trading.option.symbol);
+			await trading.action(trading.option.symbol);		
+    	});    	
     });
-
 /*
 	describe('action', function() {	
     	it('Buy (FILLED) -> Sell', async function() {
