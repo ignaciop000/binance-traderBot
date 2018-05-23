@@ -322,6 +322,7 @@ class Trading {
                     //print('Buy order fail (Not filled) Cancel order...')
                     print('Buy order fail (Not filled) Cancel order...')
                     this.order_id = 0
+                    orderDTO.statusBuy = 'Canceled';
                     this.io.emit('orders',orderDTO);
                     return
                 }
