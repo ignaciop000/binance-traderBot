@@ -13,46 +13,46 @@ const WAIT_TIME_STOP_LOSS = 20000 // miliseconds
 
 class Trading {
 
-	constructor(io, option) {
-		//console.log("options:", option);
-		this.io = io;
-		this.option = option;
-		this.quantity = option.quantity;
-		this.stop_loss = option.stop_loss;
-		this.increasing = option.increasing;
-		this.decreasing = option.decreasing;	
-		this.wait_time = option.wait_time;	
+    constructor(io, option) {
+        //console.log("options:", option);
+        this.io = io;
+        this.option = option;
+        this.quantity = option.quantity;
+        this.stop_loss = option.stop_loss;
+        this.increasing = option.increasing;
+        this.decreasing = option.decreasing;    
+        this.wait_time = option.wait_time;  
 
-		// Define trade vars  
-		this.order_id = 0;
-		this.order_data = null;
+        // Define trade vars  
+        this.order_id = 0;
+        this.order_data = null;
 
         this.sell_order_id = 0;
    
-    	this.buy_filled = true
-    	this.sell_filled = true
+        this.buy_filled = true
+        this.sell_filled = true
 
-    	this.buy_filled_qty = 0
-    	this.sell_filled_qty = 0
+        this.buy_filled_qty = 0
+        this.sell_filled_qty = 0
 
-    	// percent (When you drop 10%, sell panic.)
-    	this.stop_loss = 0
+        // percent (When you drop 10%, sell panic.)
+        this.stop_loss = 0
 
-   		//BTC amount
-    	this.amount = 0
+        //BTC amount
+        this.amount = 0
 
-    	// float(step_size * math.floor(float(free)/step_size))
-    	this.step_size = 0
+        // float(step_size * math.floor(float(free)/step_size))
+        this.step_size = 0
 
-    	// Type of commision, Default BNB_COMMISION
-    	this.commision = BNB_COMMISION		
-	}
+        // Type of commision, Default BNB_COMMISION
+        this.commision = BNB_COMMISION      
+    }
 
     getClient() {
         return Orders;
     }
 
-	async filters() {
+    async filters() {
         let symbol = this.option.symbol;
 
         //Get symbol exchange info
@@ -66,14 +66,14 @@ class Trading {
 
         //symbol_info['filters'] = {item['filterType']: item for item in symbol_info['filters']}
         for (let filter of symbol_info['filters']) {
-        	symbol_info.filters[filter.filterType] = filter;
+            symbol_info.filters[filter.filterType] = filter;
         }
         return symbol_info.filters;        
     }
 
 
-	async validate() {
-		let valid = true;
+    async validate() {
+        let valid = true;
         let symbol = this.option.symbol;
         let filters = await this.filters();
 
@@ -122,7 +122,7 @@ class Trading {
         if (this.quantity > 0) {
             // Format quantity step
             quantity = this.quantity
-		}
+        }
         quantity = this.format_step(quantity, stepSize)
         notional = last.lastBid * parseFloat(quantity)
 
@@ -172,7 +172,7 @@ class Trading {
         }
     }
 
-	async action(symbol) {
+    async action(symbol) {
         //import ipdb; ipdb.set_trace()
 
         //Order amount
@@ -205,7 +205,7 @@ class Trading {
         }
 
         let spreadPerc = (last.lastAsk/last.lastBid - 1) * 100.0
-		//#print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
+        //#print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
         //print('price: %.8f buyprice: %.8f sellprice: %.8f bid: %.8f ask: %.8f spread: %.2f Originalsellprice: %.8f' ,lastPrice, buyPrice, profitableSellingPrice, last.lastBid, last.lastAsk, spreadPerc, profitableSellingPrice-(last.lastBid *this.commision))
         this.io.emit('update', {symbol:symbol, mode:this.option.mode, buyQty: format(this.quantity), increasing:format(this.increasing), decreasing:format(this.decreasing), profit: this.option.profit + '%', stopLoss: this.stop_loss ,lastPrice:format(lastPrice), buyPrice:format(buyPrice), profitableSellingPrice: format(profitableSellingPrice), lastBid: format(last.lastBid), lastAsk: format(last.lastAsk), spreadPerc: format(spreadPerc), originalsellprice: format(profitableSellingPrice-(last.lastBid *this.commision)) });
         // analyze = threading.Thread(target=analyze, args=(symbol,))
@@ -291,42 +291,44 @@ class Trading {
     }
 
     async sell(symbol, quantity, orderId, sell_price, last_price) {
-
-        /*
-        The specified limit will try to sell until it reaches.
-        If not successful, the order will be canceled.
-        */
+        
         let orderDTO = {};
-        let buy_order = await Orders.get_order(symbol, orderId)
-        orderDTO.symbol = symbol;
-        orderDTO.orderIdBuy = orderId;
-        orderDTO.statusBuy = buy_order.status;        
-        if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
-            //print('Buy order filled... Try sell...')
-            //print('Buy order filled... Try sell...')
-        } else {
-            await wait(WAIT_TIME_CHECK_BUY_SELL)
-            if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
-                //print('Buy order filled after 0.1 second... Try sell...')
-                print('Buy order filled after 0.1 second... Try sell...')
-            } else if (buy_order.status == 'PARTIALLY_FILLED' && buy_order.side == 'BUY') {
-                //print('Buy order partially filled... Try sell... Cancel remaining buy...')
-                print('Buy order partially filled... Try sell... Cancel remaining buy...')
-                await this.cancel(symbol, orderId)
-            } else {
-                await this.cancel(symbol, orderId)
-                //print('Buy order fail (Not filled) Cancel order...')
-                print('Buy order fail (Not filled) Cancel order...')
-                this.order_id = 0
-                orderDTO.statusBuy = 'Canceled';
-                this.io.emit('orders',orderDTO);
-                return
-            }
-        }
-        let last = await Orders.get_order_book(symbol)
-        //print("Market - Quantity:%.8f Profit:%.8f buyPrice:%.8f sellPrice:%.8f",quantity ,format( quantity * ( last.lastBid - buy_order.price)), buy_order.price, last.lastBid);
         let sell_order = null;
+        orderDTO.orderIdBuy = orderId;        
         if (this.sell_order_id == 0) {
+            /*
+            The specified limit will try to sell until it reaches.
+            If not successful, the order will be canceled.
+            */
+            let orderDTO = {};
+            let buy_order = await Orders.get_order(symbol, orderId)
+            orderDTO.symbol = symbol;
+            orderDTO.orderIdBuy = orderId;
+            orderDTO.statusBuy = buy_order.status;        
+            if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
+                //print('Buy order filled... Try sell...')
+                print('Buy order filled... Try sell...')
+            } else {
+                await wait(WAIT_TIME_CHECK_BUY_SELL)
+                if (buy_order.status == 'FILLED' && buy_order.side == 'BUY') {
+                    //print('Buy order filled after 0.1 second... Try sell...')
+                    print('Buy order filled after 0.1 second... Try sell...')
+                } else if (buy_order.status == 'PARTIALLY_FILLED' && buy_order.side == 'BUY') {
+                    //print('Buy order partially filled... Try sell... Cancel remaining buy...')
+                    print('Buy order partially filled... Try sell... Cancel remaining buy...')
+                    await this.cancel(symbol, orderId)
+                } else {
+                    await this.cancel(symbol, orderId)
+                    //print('Buy order fail (Not filled) Cancel order...')
+                    print('Buy order fail (Not filled) Cancel order...')
+                    this.order_id = 0
+                    this.io.emit('orders',orderDTO);
+                    return
+                }
+            }
+            let last = await Orders.get_order_book(symbol)
+            //print("Market - Quantity:%.8f Profit:%.8f buyPrice:%.8f sellPrice:%.8f",quantity ,format( quantity * ( last.lastBid - buy_order.price)), buy_order.price, last.lastBid);
+                    
             sell_order = await Orders.sell_limit(symbol, quantity, sell_price)        
             orderDTO.sellPrice = sell_price;
             let sell_id = sell_order.orderId
@@ -357,6 +359,9 @@ class Trading {
             orderDTO.profit = format( quantity * ( sell_price - sell_order.price));
             this.io.emit('orders',orderDTO);
             return
+        } else {
+            orderDTO.statusSell = 'WAITING';
+            this.io.emit('orders',orderDTO);
         }
 
         /*
@@ -502,13 +507,12 @@ class Trading {
         }
     }
 
-	async run() {
-		let cycle = 0;
+    async run() {
+        let cycle = 0;
         let actions = [];
 
         let symbol = this.option.symbol;
-
-        print('Auto Trading for Binance.com. @yasinkuyu Thrashformer');
+        
         // Validate symbol
         await this.validate();
 
@@ -541,12 +545,12 @@ class Trading {
         let endTime = new Date().getTime();
 
         while (cycle <= this.option.loop) {
-        	startTime = new Date().getTime();
+            startTime = new Date().getTime();
 
-        	await this.action(symbol);
-           	endTime = new Date().getTime();
+            await this.action(symbol);
+            endTime = new Date().getTime();
 
-           	if (endTime - startTime < this.wait_time) {
+            if (endTime - startTime < this.wait_time) {
 
                await wait(this.wait_time - (endTime - startTime))
 
@@ -556,7 +560,7 @@ class Trading {
                }
            }           
         }
-	}
+    }
 }
 
 module.exports.Trading = Trading
