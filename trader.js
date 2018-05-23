@@ -1,4 +1,5 @@
 const express = require('express')
+const sprintf = require("sprintf-js").sprintf;
 var app	= express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
@@ -72,11 +73,25 @@ http.listen(app.get( 'port' ), function(){
 let optionsDefault = coins;
 
 const ONE_S_PRICE_DIFFERENCE_THRESHOLD = 1.0;
+const TEN_S_PRICE_DIFFERENCE_THRESHOLD = 0.75;
+const FIFTEEN_S_PRICE_DIFFERENCE_THRESHOLD = 1.0
 const VOLUME_DIFFERENCE_THRESHOLD = 1.0;
 const MINIMUM_VOLUME_THRESHOLD = 800.0
 
+let PRICE_DIFFERENCE_THRESHOLD = [];
+PRICE_DIFFERENCE_THRESHOLD["10"] = 0.75;
+PRICE_DIFFERENCE_THRESHOLD["15"] = 1.0;
+PRICE_DIFFERENCE_THRESHOLD["20"] = 1.4;
+PRICE_DIFFERENCE_THRESHOLD["30"] = 1.8;
+PRICE_DIFFERENCE_THRESHOLD["60"] = 2.1;
+PRICE_DIFFERENCE_THRESHOLD["120"] = 2.5;
+PRICE_DIFFERENCE_THRESHOLD["300"] = 3.0;
+PRICE_DIFFERENCE_THRESHOLD["600"] = 3.5;
+PRICE_DIFFERENCE_THRESHOLD["900"] = 4.0;
+
 new BinanceWS().initSocket("!ticker@arr", function(msg) {
-  let asset = 'BTC';  
+  let asset = 'BTC';
+  let aSecs = ["10", "15", "20"];  
   for (let currency of JSON.parse(msg)) {
     let objCurrency = generateCurrency(currency);
     
@@ -88,27 +103,35 @@ new BinanceWS().initSocket("!ticker@arr", function(msg) {
         let stored_currency = price_list[objCurrency.symbol];
         if (stored_currency != undefined) {
           let ct = new Date().getTime();
-          if (ct - stored_currency.time_stamp > 1) {          
+          if (ct - stored_currency.time_stamp > 1000) {          
             let priceDiff = ((objCurrency.bid_price - stored_currency.bid_price) / stored_currency.bid_price) * 100
             let volDiff = ((objCurrency.volume - stored_currency.volume) / stored_currency.volume) * 100
-            //console.log(objCurrency.symbol,priceDiff,volDiff,objCurrency.volume  )
-            if(priceDiff > ONE_S_PRICE_DIFFERENCE_THRESHOLD && volDiff > VOLUME_DIFFERENCE_THRESHOLD && objCurrency.volume > MINIMUM_VOLUME_THRESHOLD) {
-              print("PRICE AND VOL! - SYM: %s P DIFF: %.8f DIFF: %.8f VOL: %.8f",stored_currency.symbol,priceDiff, volDiff, objCurrency.volume);          
-            } else if (priceDiff > ONE_S_PRICE_DIFFERENCE_THRESHOLD && objCurrency.volume > MINIMUM_VOLUME_THRESHOLD) {
-              print("PRICE! - SYM: %s P DIFF: %.8f DIFF: %.8f VOL: %.8f",stored_currency.symbol,priceDiff, volDiff, objCurrency.volume);          
-            } else  if (volDiff > VOLUME_DIFFERENCE_THRESHOLD && objCurrency.volume > MINIMUM_VOLUME_THRESHOLD) {
-              print("VOLUME! - SYM: %s P DIFF: %.8f DIFF: %.8f VOL: %.8f",stored_currency.symbol,priceDiff, volDiff, objCurrency.volume);
+            if(priceDiff > ONE_S_PRICE_DIFFERENCE_THRESHOLD && volDiff > VOLUME_DIFFERENCE_THRESHOLD && objCurrency.volume > MINIMUM_VOLUME_THRESHOLD) {              
+              let msg = sprintf("PRICE AND VOLUME! - SYMBOL: %s PRICE DIFF: %.8f VOLUME DIFF: %.8f VOLUME: %.8f",stored_currency.symbol,priceDiff, volDiff, objCurrency.volume)
+              print("%s", msg);
+              io.emit('scanner',{message:msg, type:'success'});      
+            } else if (priceDiff > ONE_S_PRICE_DIFFERENCE_THRESHOLD && objCurrency.volume > MINIMUM_VOLUME_THRESHOLD) {              
+              let msg = sprintf("PRICE! - SYMBOL: %s PRICE DIFF: %.8f VOL: %.8f",stored_currency.symbol,priceDiff, objCurrency.volume)
+              print("%s", msg);
+              io.emit('scanner',{message:msg, type:'success'});          
+            } else  if (volDiff > VOLUME_DIFFERENCE_THRESHOLD && objCurrency.volume > MINIMUM_VOLUME_THRESHOLD) {              
+              let msg = sprintf("VOLUME! - SYMBOL: %s VOLUME DIFF: %.8f VOL: %.8f",stored_currency.symbol, volDiff, objCurrency.volume)
+              print("%s", msg);
+              io.emit('scanner',{message:msg, type:'success'});     
             }
-
-            if (ct - stored_currency.ten_sec_time_stamp >= 10) {
-              let ten_second_price_diff = ((objCurrency.bid_price - stored_currency.ten_sec_start_bid_price) / stored_currency.ten_sec_start_bid_price) * 100
-              if (ten_second_price_diff > TEN_S_PRICE_DIFFERENCE_THRESHOLD) {
-                print("PRICE AND VOL! - SYM: %s P DIFF: %.8f DIFF: %.8f VOL: %.8f",stored_currency.symbol,priceDiff, volDiff, objCurrency.volume);  
+            for (let sec of aSecs) {
+              if ((ct - stored_currency[sec].time_stamp) >= stored_currency[sec].time) {
+                let price_diff = ((objCurrency.bid_price - stored_currency[sec].start_bid_price) / stored_currency[sec].start_bid_price) * 100;
+                if (price_diff > PRICE_DIFFERENCE_THRESHOLD[sec]) {
+                  let msg = sprintf("%s - SYMBOL: %s DIFF: %.8f",stored_currency[sec].flag,stored_currency.symbol,priceDiff, price_diff)
+                  print("%s", msg);
+                  io.emit('scanner',{message:msg, type:'success'});    
+                }
+                stored_currency[sec].start_bid_price = objCurrency.bid_price
+                stored_currency[sec].time_stamp = ct
               }
-              stored_currency.ten_sec_start_bid_price = objCurrency.bid_price
-              stored_currency.ten_sec_time_stamp = ct
             }
-
+            
             stored_currency.bid_price = objCurrency.bid_price
             stored_currency.ask_price = objCurrency.ask_price
             stored_currency.volume = objCurrency.volume

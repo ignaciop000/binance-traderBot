@@ -32,7 +32,15 @@ function generateCurrency(currency) {
     obj.ask_price = parseFloat(currency.a) //best ask price
     obj.volume = parseFloat(currency.q)    //volume
     let initial_timestamp = new Date().getTime() //initial timestamp
-    obj.time_stamp = initial_timestamp;                                              
+    obj.time_stamp = initial_timestamp;
+    let aSecs = ["10", "15", "20"];
+    for (let sec of aSecs) {
+      obj[sec] = {}
+      obj[sec].time_stamp = initial_timestamp;
+      obj[sec].start_bid_price = parseFloat(currency.b);
+      obj[sec].flag = sec+'S FLAG!';
+      obj[sec].time = parseInt(sec) * 1000;
+    }
    /* 
     
     self.open_price = float(currencyArray['o'])                                             #open price
@@ -43,8 +51,8 @@ function generateCurrency(currency) {
     self.percent_change = float(currencyArray['P'])                                           #% price change
     
     
-    self.ten_sec_time_stamp = initial_timestamp
-    self.ten_sec_start_bid_price = float(currencyArray['b'])
+    
+    
     self.fifteen_sec_time_stamp = initial_timestamp
     self.fifteen_sec_start_bid_price = float(currencyArray['b'])
     self.twenty_sec_time_stamp = initial_timestamp
