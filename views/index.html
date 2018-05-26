@@ -18,13 +18,17 @@
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
   <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
   <link type="text/css" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
-  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>    
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" type="text/javascript"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-
+  <script src="js/bootstrap-notify.min.js"></script>
   </head>
-  <body>    
-  	<h2>Market <span class="badge" id="status">Offline</span></h2>
+  <body> 
+    <div>   
+  	   <h2>Market <span class="badge" id="status">Offline</span></h2>
+   
+      <input id="scannerBTCAlerts" type="checkbox" data-off-text="False" data-on-text="True" checked="false" class="BSswitch">
+    </div>
     <div id="jsGrid"></div>
   	<h2>Orders</h2>
     <div id="jsGridOrders"></div>  
@@ -51,7 +55,6 @@
           var items = $("#jsGrid").jsGrid("option", "data");
           var item = items.filter(x => x.symbol === msg.symbol);
           if (item.length == 0) {
-            console.log(item);
             $("#jsGrid").jsGrid("insertItem", msg).done(function() {
               //console.log("insertion completed");
             });
@@ -75,6 +78,15 @@
             });   
           }              
     	 });
+      socket.on('scanner', function(msg){
+        $.notify({
+          // options
+          message: msg.message 
+        },{
+          // settings
+          type: msg.type
+        });
+      });
   	});
   </script>
 <script>
