@@ -26,7 +26,11 @@ class Trading {
         } else { 
             this.wait_time = option.wait_time * 1000;  
         }
-        
+        if (option.debug == null) {
+            this.debug = false;
+        } else { 
+            this.debug = true;
+        }        
         // Define trade vars  
         this.order_id = 0;
         this.order_data = null;
@@ -245,32 +249,38 @@ class Trading {
                 // Perform buy action
                 await this.sell(symbol, quantity, this.order_id, profitableSellingPrice, lastPrice);            
                 return
-            }
+            } else 
 
             /*
             Did profit get caught
             if ask price (Buy Price) is greater than profit price (sell Price + Profit + Commission), 
             buy with my buy price,    
-            */        
-            //print ('%f >= %f %s',last.lastAsk,profitableSellingPrice,(last.lastAsk >= profitableSellingPrice));
-            if ((last.lastAsk >= profitableSellingPrice && this.option.mode == 'profit') || (lastPrice <= this.option.buyprice && this.option.mode == 'range')) {
-                //print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
+            */                   
+            if (this.order_id == 0) {
+                //Profit = lastBid + (lastBid * this.option.profit / 100) + (lastBid * this.commision);
+                //last.lastAsk = last.lastBid + (last.lastBid + (profit / 100) ) + last.lastBid * this.commision;
+                if (this.debug) {
+                    let actualProfit = (((last.lastAsk - (last.lastBid * this.commision)) / last.lastBid )-1) * 100; 
+                    print ('Symbol: %s Profit: %.2f Expected Profit: %.2f ASK: %.8f BID: %.8f Commission: %.8f profitSelling %.8f',this.option.symbol, actualProfit, this.option.profit ,last.lastAsk, last.lastBid,  this.commision, profitableSellingPrice);
+                }
+                if ((last.lastAsk >= profitableSellingPrice && this.option.mode == 'profit') || (lastPrice <= this.option.buyprice && this.option.mode == 'range')) {
+                    //print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
 
-                if (this.order_id == 0) {
-                    let orderId = await this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
-                    let orderDTO = {};
-                    orderDTO.symbol = symbol; 
-                    orderDTO.orderIdBuy = this.order_id;
-                    orderDTO.buyPrice = format(buyPrice);
-                    orderDTO.quantity = quantity;
-                    this.io.emit('orders',orderDTO);
+                   
+                        let orderId = await this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
+                        let orderDTO = {};
+                        orderDTO.symbol = symbol; 
+                        orderDTO.orderIdBuy = this.order_id;
+                        orderDTO.buyPrice = format(buyPrice);
+                        orderDTO.quantity = quantity;
+                        this.io.emit('orders',orderDTO);
 
-                    //this.io.emit('orders',{action:'buy',orderId: this.order_id, symbol: symbol, quantity: quantity, buyPrice: format(buyPrice), profitableSellingPrice: format(profitableSellingPrice)});
+                        //this.io.emit('orders',{action:'buy',orderId: this.order_id, symbol: symbol, quantity: quantity, buyPrice: format(buyPrice), profitableSellingPrice: format(profitableSellingPrice)});
 
-                    //# Perform check/sell action
-                    //# checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
-                    //# checkAction.start()
-                }          
+                        //# Perform check/sell action
+                        //# checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
+                        //# checkAction.start()                       
+                }
             }
         } catch (err) {
             print("Error action %s", err);

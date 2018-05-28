@@ -6,6 +6,7 @@ const { format, checkEnum, print } = require('./utils');
 const axios = require("axios");
 const getSignature = require('./signature');
 const fs = require('fs');
+const debug = false;
 
 class Binance {
 
@@ -88,12 +89,15 @@ class Binance {
         return null
     }    
 
-	async get_ticker(symbol) {			
-        const url = 'api/v1/ticker/24hr';
+	async get_ticker(symbol) {			        
         try {
+            const url = 'api/v1/ticker/24hr';
             const { data } = await this.request.get(url, { params : { symbol: symbol }});
             return data;
         } catch (err){
+            if (debug) {
+                console.log(err);
+            }
             if (err && err.response && err.response.data && err.response.data.msg){
                 print("Error Message: %s", err.response.data.msg);
             }
@@ -101,12 +105,15 @@ class Binance {
         }
 	}
 
-	async get_order_book(symbol, limit = 50) {		
-    	const url = 'api/v1/depth';
+	async get_order_book(symbol, limit = 50) {		    	
         try {
-    	const { data } = await this.request.get(url, { params : { symbol: symbol, limit: limit} });
-    	return data;    	
+            const url = 'api/v1/depth';
+    	    const { data } = await this.request.get(url, { params : { symbol: symbol, limit: limit} });
+    	    return data;    	
         } catch (err) {
+            if (debug) {
+                console.log(err);
+            }
             if (err && err.response && err.response.data && err.response.data.msg){
                 print("Error Message: %s", err.response.data.msg);
             }
@@ -115,73 +122,109 @@ class Binance {
 	}
 
 	async get_exchange_info(symbol) {		
-    	const url = 'api/v1/exchangeInfo';
-    	const { data } = await this.request.get(url);
-        //fs.writeFile((new Date).getTime()+'-exchange.resonse', JSON.stringify(data), function (err) {
-        //    if (err) {
-        //        return console.log(err);            
-        //    }
-        //});
-    	return data;
+    	try {
+           const url = 'api/v1/exchangeInfo';        
+    	   const { data } = await this.request.get(url);
+           return data;
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }    	
 	}
 
 	async buy_limit(market, quantity, rate){		
-        let params = {}
-        params.symbol = market;
-        params.side = "BUY";
-        params.type = "LIMIT";
-        params.timeInForce = "GTC"
-        params.quantity = format(quantity)
-        params.price = format(rate)        
-        this.signedMethod() // secret and api key required for this method
-        this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity", "price"]) // data required in the params object
+        try {
+            let params = {}       
+            params.symbol = market;
+            params.side = "BUY";
+            params.type = "LIMIT";
+            params.timeInForce = "GTC"
+            params.quantity = format(quantity)
+            params.price = format(rate)        
+            this.signedMethod() // secret and api key required for this method
+            this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity", "price"]) // data required in the params object
 
-        const url = "api/v3/order"
-        let query = this.makeQuery(url, params);
-        //console.log(query);
-        const resp = await this.request.post(query);   
-        //fs.writeFile((new Date).getTime()+'-buy.resonse', JSON.stringify(resp.data), function (err) {
-        //     if (err) {
-        //         return console.log(err);            
-        //    }
-        // }); 
-        return resp.data;
+            const url = "api/v3/order"
+            let query = this.makeQuery(url, params);
+            //console.log(query);
+            const resp = await this.request.post(query);   
+            return resp.data;
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }   
 	}
 
 	async query_order(symbol, orderId){
-        this.signedMethod() // secret and api key required for this method
-        let params = {}
-        params.symbol = symbol;
-        params.orderId = orderId;
-        this.checkParams(params, ["symbol", "orderId"]) // data required in the params object
+        try {
+            this.signedMethod() // secret and api key required for this method
+            let params = {}
+            params.symbol = symbol;
+            params.orderId = orderId;
+            this.checkParams(params, ["symbol", "orderId"]) // data required in the params object
 
-        const url = 'api/v3/order';
-        let query = this.makeQuery(url, params);
-        //console.log(query);
-        const resp = await this.request.get(query);
-        //fs.writeFile((new Date).getTime()+'-query.resonse', JSON.stringify(resp.data), function (err) {
-        //    if (err) {
-        //        return console.log(err);            
-        //    }
-        //}); 
-        return resp.data; 
+            const url = 'api/v3/order';
+            let query = this.makeQuery(url, params);
+            //console.log(query);
+            const resp = await this.request.get(query);
+            return resp.data; 
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }
+        
 	}
 
     async allOrders(params = {}){
-        this.signedMethod() // secret and api key required for this method
-        this.checkParams(params, ["symbol"]) // data required in the params object
-        const url = "api/v3/allOrders"
-        let query = this.makeQuery(url, params);
-        const resp = await this.request.get(query);              
-        return resp.data;
+        try {
+            this.signedMethod() // secret and api key required for this method
+            this.checkParams(params, ["symbol"]) // data required in the params object
+            const url = "api/v3/allOrders"
+            let query = this.makeQuery(url, params);
+            const resp = await this.request.get(query);              
+            return resp.data;
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }
     }
 
     async openOrders(params = {}){
-        this.signedMethod() // secret and api key required for this method
-        const url = "api/v3/openOrders"
-        let query = this.makeQuery(url, params);
-        const resp = await this.request.get(query);              
-        return resp.data;
+        try {
+            this.signedMethod() // secret and api key required for this method
+            const url = "api/v3/openOrders"
+            let query = this.makeQuery(url, params);
+            const resp = await this.request.get(query);              
+            return resp.data;
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }            
     }
     
     apiRequired(){
@@ -230,75 +273,115 @@ class Binance {
 
 
 	async cancel(market, order_id){
-        this.signedMethod() // secret and api key required for this method
-        let params = {}
-        params.symbol = market;
-        params.orderId = order_id;
-        this.checkParams(params, ["symbol", "orderId"]) // data required in the params object
+        try {
+            this.signedMethod() // secret and api key required for this method
+            let params = {}
+            params.symbol = market;
+            params.orderId = order_id;
+            this.checkParams(params, ["symbol", "orderId"]) // data required in the params object
 
-        const url = 'api/v3/order';
-        let query = this.makeQuery(url, params);
-        const resp = await this.request.delete(query);
-        //fs.writeFile((new Date).getTime()+'-cancel.resonse', JSON.stringify(resp.data), function (err) {
-        //    if (err) {
-        //        return console.log(err);            
-        //    }
-        //}); 
-        return resp.data;
+            const url = 'api/v3/order';
+            let query = this.makeQuery(url, params);
+            const resp = await this.request.delete(query); 
+            return resp.data;
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }      
     }
 
     async sell_limit(market, quantity, rate){
-        let params = {}
-        params.symbol = market;
-        params.side = "SELL";
-        params.type = "LIMIT";
-        params.timeInForce = "GTC"
-        params.quantity = format(quantity)
-        params.price = format(rate)        
-        this.signedMethod() // secret and api key required for this method
-        this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity", "price"]) // data required in the params object
+        try {
+            let params = {}
+            params.symbol = market;
+            params.side = "SELL";
+            params.type = "LIMIT";
+            params.timeInForce = "GTC"
+            params.quantity = format(quantity)
+            params.price = format(rate)        
+            this.signedMethod() // secret and api key required for this method
+            this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity", "price"]) // data required in the params object
 
-        const url = "api/v3/order"
-        let query = this.makeQuery(url, params);
-        //console.log(query);
-        const resp = await this.request.post(query);    
-        //fs.writeFile((new Date).getTime()+'-sell.resonse', JSON.stringify(resp.data), function (err) {
-        //    if (err) {
-        //        return console.log(err);            
-        //    }
-        //}); 
-        return resp.data;  
+            const url = "api/v3/order"
+            let query = this.makeQuery(url, params);
+            //console.log(query);
+            const resp = await this.request.post(query);    
+            return resp.data;
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }                
     }
 
     async sell_market(market, quantity){
-        let params = {}
-        params.symbol = market;
-        params.side = "SELL";
-        params.type = "MARKET";
-        params.quantity = format(quantity) 
-        this.signedMethod() // secret and api key required for this method
-        this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity"]) // data required in the params object
+        try {
+            let params = {}
+            params.symbol = market;
+            params.side = "SELL";
+            params.type = "MARKET";
+            params.quantity = format(quantity) 
+            this.signedMethod() // secret and api key required for this method
+            this.checkParams(params, ["symbol", "side", "type", "timeInForce", "quantity"]) // data required in the params object
 
-        const url = "api/v3/order"
-        let query = this.makeQuery(url, params);
-        console.log(query);
-        const resp = await this.request.post(query);    
-        return resp.data;  
+            const url = "api/v3/order"
+            let query = this.makeQuery(url, params);
+            console.log(query);
+            const resp = await this.request.post(query);    
+            return resp.data; 
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }              
     }
 
     async get_products() {
-        const url = "exchange/public/product"
-        const { data } = await this.request.get(url);
-        return data;
+        try {
+            const url = "exchange/public/product"
+            const { data } = await this.request.get(url);
+            return data;
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }                  
     }
 
     async get_account() {
-        let params = {};
-        this.signedMethod() // secret and api key required for this method       
-        const url = "api/v3/account"
-        let query = this.makeQuery(url, params);
-        const resp = await this.request.get(query);              
-        return resp.data;
+        try {
+            let params = {};
+            this.signedMethod() // secret and api key required for this method       
+            const url = "api/v3/account"
+            let query = this.makeQuery(url, params);
+            const resp = await this.request.get(query);              
+            return resp.data;
+        } catch (err){
+            if (debug) {
+                console.log(err);
+            }
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }          
     }
 
 }
