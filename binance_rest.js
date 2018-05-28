@@ -2,7 +2,7 @@
 
 // binanceRequest is used to get an axios instance with default url and default header
 let binanceRequest = require('./request');
-const { format, checkEnum } = require('./utils');
+const { format, checkEnum, print } = require('./utils');
 const axios = require("axios");
 const getSignature = require('./signature');
 const fs = require('fs');
@@ -90,24 +90,28 @@ class Binance {
 
 	async get_ticker(symbol) {			
         const url = 'api/v1/ticker/24hr';
-        const { data } = await this.request.get(url, { params : { symbol: symbol }});
-        //fs.writeFile((new Date).getTime()+'-ticker.resonse', JSON.stringify(data), function (err) {
-        //    if (err) {
-        //        return console.log(err);            
-        //    }
-        //});
-        return data;
+        try {
+            const { data } = await this.request.get(url, { params : { symbol: symbol }});
+            return data;
+        } catch (err){
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }
 	}
 
 	async get_order_book(symbol, limit = 50) {		
     	const url = 'api/v1/depth';
+        try {
     	const { data } = await this.request.get(url, { params : { symbol: symbol, limit: limit} });
-        //fs.writeFile((new Date).getTime()+'-ordebook.resonse', JSON.stringify(data), function (err) {
-        //    if (err) {
-        //        return console.log(err);            
-        //    }
-        //});
     	return data;    	
+        } catch (err) {
+            if (err && err.response && err.response.data && err.response.data.msg){
+                print("Error Message: %s", err.response.data.msg);
+            }
+            throw err;
+        }
 	}
 
 	async get_exchange_info(symbol) {		

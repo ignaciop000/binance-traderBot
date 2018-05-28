@@ -8,6 +8,22 @@ const Orders = require('./../orders');
 
 
 describe('Orders', function() {
+
+  describe('get_ticker', function() {
+    this.timeout(10000)
+    it('get_ticker - should be ok', function(done) {
+      let mockAdapter = new MockAdapter(Orders.getClient().getRequest());
+      mockAdapter.onGet('https://www.binance.com/api/v1/ticker/24hr', { params: {symbol:'ETHBTC'}}).reply(404, {
+          msg:'error 404'
+      });
+      Orders.get_ticker('ETHBTC').then((lastPrice) => {              
+        done(new Error('Catch'));
+      }).catch((err) => {                      
+        done()
+      });
+    });
+  });
+
   describe('get_ticker', function() {
     this.timeout(10000)
     it('get_ticker - should be ok', function(done) {
