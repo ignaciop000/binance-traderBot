@@ -6,7 +6,7 @@ const { format, checkEnum, print } = require('./utils');
 const axios = require("axios");
 const getSignature = require('./signature');
 const fs = require('fs');
-const debug = false;
+const debug = true;
 
 class Binance {
 
