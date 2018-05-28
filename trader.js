@@ -57,9 +57,7 @@ app.get('/account', async function(req, res){
   	res.render('account', { account: account });
 });
 
-io.on('connection', async function(socket){
-	let orders = await Orders.openOrders()
-	console.log(orders);
+io.on('connection', async function(socket){  
 //  socket.on('disconnect', function(){
 //    console.log('user disconnected');
 //  });
@@ -73,10 +71,8 @@ http.listen(app.get( 'port' ), function(){
 let optionsDefault = coins;
 
 const ONE_S_PRICE_DIFFERENCE_THRESHOLD = 1.0;
-const TEN_S_PRICE_DIFFERENCE_THRESHOLD = 0.75;
-const FIFTEEN_S_PRICE_DIFFERENCE_THRESHOLD = 1.0
 const VOLUME_DIFFERENCE_THRESHOLD = 1.0;
-const MINIMUM_VOLUME_THRESHOLD = 800.0
+const MINIMUM_VOLUME_THRESHOLD = 800.0;
 
 let PRICE_DIFFERENCE_THRESHOLD = [];
 PRICE_DIFFERENCE_THRESHOLD["10"] = 0.75;
@@ -91,7 +87,7 @@ PRICE_DIFFERENCE_THRESHOLD["900"] = 4.0;
 
 new BinanceWS().initSocket("!ticker@arr", function(msg) {
   let asset = 'BTC';
-  let aSecs = ["10", "15", "20"];  
+  let aSecs = ["10", "15", "20", "30", "60", "120", "300", "600", "900"];
   for (let currency of JSON.parse(msg)) {
     let objCurrency = generateCurrency(currency);
     

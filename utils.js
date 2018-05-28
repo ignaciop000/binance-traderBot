@@ -33,7 +33,7 @@ function generateCurrency(currency) {
     obj.volume = parseFloat(currency.q)    //volume
     let initial_timestamp = new Date().getTime() //initial timestamp
     obj.time_stamp = initial_timestamp;
-    let aSecs = ["10", "15", "20"];
+    let aSecs = ["10", "15", "20", "30", "60", "120", "300", "600", "900"];
     for (let sec of aSecs) {
       obj[sec] = {}
       obj[sec].time_stamp = initial_timestamp;
@@ -49,26 +49,8 @@ function generateCurrency(currency) {
     self.number_of_trades = float(currencyArray['n'])                                         #total number of trades
     self.price_change = float(currencyArray['p'])                                           #price change
     self.percent_change = float(currencyArray['P'])                                           #% price change
-    
-    
-    
-    
-    self.fifteen_sec_time_stamp = initial_timestamp
-    self.fifteen_sec_start_bid_price = float(currencyArray['b'])
-    self.twenty_sec_time_stamp = initial_timestamp
-    self.twenty_sec_start_bid_price = float(currencyArray['b'])
-    self.thirty_sec_time_stamp = initial_timestamp
-    self.thirty_sec_start_bid_price = float(currencyArray['b'])
-    self.one_min_time_stamp = initial_timestamp
-    self.one_min_start_bid_price = float(currencyArray['b'])
-    self.two_min_time_stamp = initial_timestamp
-    self.two_min_start_bid_price = float(currencyArray['b'])
-    self.five_min_time_stamp = initial_timestamp
-    self.five_min_start_bid_price = float(currencyArray['b'])
-    self.ten_min_time_stamp = initial_timestamp
-    self.ten_min_start_bid_price = float(currencyArray['b'])
-    self.fifteen_min_time_stamp = initial_timestamp
-    self.fifteen_min_start_bid_price = float(currencyArray['b'])*/
+    */
+  
   return obj;
 }
 
