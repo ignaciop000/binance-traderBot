@@ -31,7 +31,6 @@ const coins = [
 	decreasing:0.00000001,
 	loop:0,
 	wait_time:0.7,
-	prints: 1,
 	debug: true
 }
 ]

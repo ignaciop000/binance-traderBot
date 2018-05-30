@@ -7,39 +7,37 @@ const WAIT_TIME_BUY_SELL = 1000 // miliseconds
 const WAIT_TIME_CHECK_BUY_SELL = 200 // miliseconds
 const WAIT_TIME_CHECK_SELL = 5000 // miliseconds
 const WAIT_TIME_STOP_LOSS = 20000 // miliseconds
-/*
-            MAX_TRADE_SIZE = 7 # int
-        */
 
 class Trading {
 
     constructor(io, option) {
-        //console.log("options:", option);
         this.io = io;
         this.option = option;
         this.quantity = option.quantity;
         this.stop_loss = option.stop_loss;
         this.increasing = option.increasing;
-        this.decreasing = option.decreasing;   
+        this.decreasing = option.decreasing;
+
         if (option.wait_time == null) {
+            //default value
             this.wait_time = 0.7 * 1000;      
         } else { 
             this.wait_time = option.wait_time * 1000;  
         }
+
         if (option.debug == null) {
+            //default value
             this.debug = false;
         } else { 
             this.debug = true;
-        }        
+        }    
+
         // Define trade vars  
         this.order_id = 0;
         this.order_data = null;
-
         this.sell_order_id = 0;
-   
         this.buy_filled = true
         this.sell_filled = true
-
         this.buy_filled_qty = 0
         this.sell_filled_qty = 0
 
@@ -187,8 +185,6 @@ class Trading {
 
     async action(symbol) {
         try {
-            //import ipdb; ipdb.set_trace()
-
             //Order amount
             let quantity = this.quantity;
 
@@ -219,29 +215,37 @@ class Trading {
             }
 
             let spreadPerc = (last.lastAsk/last.lastBid - 1) * 100.0
-            //#print('price:%.8f buyp:%.8f sellp:%.8f-bid:%.8f ask:%.8f spread:%.2f' % (lastPrice, buyPrice, profitableSellingPrice, lastBid, lastAsk, spreadPerc))
             //print('price: %.8f buyprice: %.8f sellprice: %.8f bid: %.8f ask: %.8f spread: %.2f Originalsellprice: %.8f' ,lastPrice, buyPrice, profitableSellingPrice, last.lastBid, last.lastAsk, spreadPerc, profitableSellingPrice-(last.lastBid *this.commision))
-            this.io.emit('update', {symbol:symbol, mode:this.option.mode, buyQty: format(this.quantity), increasing:format(this.increasing), decreasing:format(this.decreasing), profit: this.option.profit + '%', stopLoss: this.stop_loss ,lastPrice:format(lastPrice), buyPrice:format(buyPrice), profitableSellingPrice: format(profitableSellingPrice), lastBid: format(last.lastBid), lastAsk: format(last.lastAsk), spreadPerc: format(spreadPerc), originalsellprice: format(profitableSellingPrice-(last.lastBid *this.commision)) });
-            // analyze = threading.Thread(target=analyze, args=(symbol,))
-            // analyze.start()
-            
+            this.io.emit('update', { 
+                symbol:symbol,
+                mode:this.option.mode,
+                buyQty: format(this.quantity),
+                increasing: format(this.increasing),
+                decreasing: format(this.decreasing),
+                profit: this.option.profit + '%',
+                stopLoss: this.stop_loss,
+                lastPrice:format(lastPrice),
+                buyPrice:format(buyPrice),
+                profitableSellingPrice: format(profitableSellingPrice),
+                lastBid: format(last.lastBid),
+                lastAsk: format(last.lastAsk),
+                spreadPerc: format(spreadPerc),
+                originalsellprice: format(profitableSellingPrice -(last.lastBid *this.commision)) 
+            });            
 
             if (this.order_id > 0) {
                 //Profit mode
                 if (this.order_data != null) {
-
                     order = this.order_data
-
                     // Last control
                     let newProfitableSellingPrice = this.calc(parseFloat(order.price))
-
                     if (last.lastAsk >= newProfitableSellingPrice){
                         profitableSellingPrice = newProfitableSellingPrice
                     }
                 }
                 //range mode
                 if (this.option.mode == 'range') {
-                    profitableSellingPrice = this.option.sellprice
+                    profitableSellingPrice = this.option.sellprice;
                 }
                            
                 // If the order is complete, try to sell it.            
@@ -257,29 +261,19 @@ class Trading {
             buy with my buy price,    
             */                   
             if (this.order_id == 0) {
-                //Profit = lastBid + (lastBid * this.option.profit / 100) + (lastBid * this.commision);
-                //last.lastAsk = last.lastBid + (last.lastBid + (profit / 100) ) + last.lastBid * this.commision;
                 if (this.debug) {
                     let actualProfit = (((last.lastAsk - (last.lastBid * this.commision)) / last.lastBid )-1) * 100; 
                     print ('Symbol: %s Profit: %.2f Expected Profit: %.2f ASK: %.8f BID: %.8f Commission: %.8f profitSelling %.8f',this.option.symbol, actualProfit, this.option.profit ,last.lastAsk, last.lastBid,  this.commision, profitableSellingPrice);
                 }
                 if ((last.lastAsk >= profitableSellingPrice && this.option.mode == 'profit') || (lastPrice <= this.option.buyprice && this.option.mode == 'range')) {
-                    //print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
-
-                   
-                        let orderId = await this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
-                        let orderDTO = {};
-                        orderDTO.symbol = symbol; 
-                        orderDTO.orderIdBuy = this.order_id;
-                        orderDTO.buyPrice = format(buyPrice);
-                        orderDTO.quantity = quantity;
-                        this.io.emit('orders',orderDTO);
-
-                        //this.io.emit('orders',{action:'buy',orderId: this.order_id, symbol: symbol, quantity: quantity, buyPrice: format(buyPrice), profitableSellingPrice: format(profitableSellingPrice)});
-
-                        //# Perform check/sell action
-                        //# checkAction = threading.Thread(target=self.check, args=(symbol, self.order_id, quantity,))
-                        //# checkAction.start()                       
+                    //print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);                   
+                    let orderId = await this.buy(symbol, quantity, buyPrice, profitableSellingPrice);
+                    let orderDTO = {};
+                    orderDTO.symbol = symbol; 
+                    orderDTO.orderIdBuy = this.order_id;
+                    orderDTO.buyPrice = format(buyPrice);
+                    orderDTO.quantity = quantity;
+                    this.io.emit('orders',orderDTO);                                        
                 }
             }
         } catch (err) {
@@ -368,11 +362,6 @@ class Trading {
         await wait(WAIT_TIME_CHECK_SELL)
         orderDTO.statusSell = sell_order.status;
         if (sell_order.status == 'FILLED') {
-
-            //print('Sell order (Filled) Id: %d', sell_id)
-            //print('LastPrice : %.8f', last_price)
-            //print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' % (self.option.profit, float(sell_order['price']), sell_price))
-
             print('Sell order (Filled) Id: %d', this.sell_order_id)
             print('LastPrice : %.8f', last_price)
             print('Profit: %%%s. Buy price: %.8f Sell price: %.8f' , format( quantity * ( sell_price - sell_order.price)), parseFloat(sell_order.price), sell_price)
@@ -407,7 +396,6 @@ class Trading {
                 }
 
             } else {
-                //print('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
                 print('We apologize... Cant sell even at loss... Please sell manually... Stopping program...')
                 await this.cancel(symbol, sell_id)
                 process.exit(1)
@@ -418,16 +406,8 @@ class Trading {
                 status_order = await Orders.get_order(symbol, sell_id);
                 sell_status = status_order.status
                 lastPrice = await Orders.get_ticker(symbol)
-                if (lastPrice == null) {
-                    print('Error, getting lastPrice');                    
-                } else {                    
-                    print('Sold! Continue trading...')    
-                }
                 print('Sold! Continue trading...')    
-                //print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))
-                //print('Sold! Continue trading...')
-
-                
+                //print('Status: %s Current price: %.8f Sell price: %.8f' % (sell_status, lastPrice, sell_price))        
             }
 
             this.order_id = 0
@@ -440,13 +420,10 @@ class Trading {
 
     async stop( symbol, quantity, orderId, last_price) {
         // If the target is not reached, stop-loss.
-        let stop_order = await Orders.get_order(symbol, orderId)
-
-        let stopprice =  this.calc(parseFloat(stop_order.price))
-
-        lossprice = stopprice - (stopprice * this.stop_loss / 100)
-
-        let status = stop_order.status
+        let stop_order = await Orders.get_order(symbol, orderId);
+        let stopprice =  this.calc(parseFloat(stop_order.price));
+        let lossprice = stopprice - (stopprice * this.stop_loss / 100);
+        let status = stop_order.status;
 
         // Order status
         if (status == 'NEW' || status == 'PARTIALLY_FILLED') {
@@ -458,7 +435,6 @@ class Trading {
 
                     sello = await Orders.sell_market(symbol, quantity)
 
-                    //#print('Stop-loss, sell market, %s' % (last_price))
                     print('Stop-loss, sell market, %s' , last_price)
 
                     let sell_id = sello.orderId
@@ -547,15 +523,13 @@ class Trading {
         //console.log('Estimated profit: %.8f' % (self.quantity*self.option.profit))
 
         if (this.option.mode == 'range') {
-/*
-           if self.option.buyprice == 0 or self.option.sellprice == 0:
-               print('Please enter --buyprice / --sellprice\n')
-               exit(1)
-
-           print('Range Mode Options:')
-           print('\tBuy Price: %.8f', self.option.buyprice)
-           print('\tSell Price: %.8f', self.option.sellprice)
-*/
+            if (this.option.buyprice == null || this.option.sellprice == null) {
+                print('Please set on coins options buyprice and sellprice');
+                process.exit(1);
+            }
+            print('Range Mode Options:')
+            print('\tBuy Price: %.8f', this.option.buyprice)
+            print('\tSell Price: %.8f', this.option.sellprice)
         } else {
             print('Profit Mode Options:');
             print('\tPreferred Profit: %0.2f%%', this.option.profit);
