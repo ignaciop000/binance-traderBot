@@ -1,4 +1,5 @@
 const { print, wait, format } = require('./utils');
+const sprintf = require("sprintf-js").sprintf;
 const Orders = require('./orders');
 
 // Define static vars
@@ -53,7 +54,8 @@ class Trading {
         this.step_size = 0
 
         // Type of commision, Default BNB_COMMISION
-        this.commision = BNB_COMMISION      
+        this.commision = BNB_COMMISION
+        this.lastmsg = "";
     }
 
     getClient() {
@@ -261,7 +263,12 @@ class Trading {
                 //last.lastAsk = last.lastBid + (last.lastBid + (profit / 100) ) + last.lastBid * this.commision;
                 if (this.debug) {
                     let actualProfit = (((last.lastAsk - (last.lastBid * this.commision)) / last.lastBid )-1) * 100; 
-                    print ('Symbol: %s Profit: %.2f Expected Profit: %.2f ASK: %.8f BID: %.8f Commission: %.8f profitSelling %.8f',this.option.symbol, actualProfit, this.option.profit ,last.lastAsk, last.lastBid,  this.commision, profitableSellingPrice);
+                    let msg = sprintf ('Symbol: %s Profit: %.2f Expected Profit: %.2f ASK: %.8f BID: %.8f Commission: %.8f profitSelling %.8f',this.option.symbol, actualProfit, this.option.profit ,last.lastAsk, last.lastBid,  this.commision, profitableSellingPrice);                    
+                    if (msg != this.lastmsg) {
+                        print ('%s', msg);
+                        this.lastmsg = msg;
+                    }
+
                 }
                 if ((last.lastAsk >= profitableSellingPrice && this.option.mode == 'profit') || (lastPrice <= this.option.buyprice && this.option.mode == 'range')) {
                     //print ("Mode: %s, LastAsk: %s, Profit Sell Price %s, ", this.option.mode, last.lastAsk, profitableSellingPrice);
@@ -317,7 +324,8 @@ class Trading {
         
         let orderDTO = {};
         let sell_order = null;
-        orderDTO.orderIdBuy = orderId;        
+        orderDTO.orderIdBuy = orderId;  
+        orderDTO.symbol = symbol;      
         if (this.sell_order_id == 0) {
             /*
             The specified limit will try to sell until it reaches.
